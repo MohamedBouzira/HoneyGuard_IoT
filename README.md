@@ -312,3 +312,8 @@ ESTIN — PFE 2025
 
 ## Supervisor
 - **Doctor Oussama Allama**
+
+---
+
+##License
+- **CC BY-NC**

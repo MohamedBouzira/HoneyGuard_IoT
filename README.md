@@ -13,6 +13,8 @@
 
 HoneyGuard_IoT is a full-stack cybersecurity research platform that deploys a realistic **multi-protocol IoT smart-home honeypot**, collects real attacker traffic in the wild, and uses **machine learning** and **deep learning** to detect intrusions while simultaneously training a **reinforcement learning pentest agent** to probe its own defenses.
 
+👉 Live site:   https://mohamedbouzira.github.io/HoneyGuard_IoT/website/honeypot-site.html
+
 ---
 
 ## Architecture

@@ -1,0 +1,308 @@
+# ================================================================
+#  DOCKER COMPOSE — Full IoT Honeypot Stack
+#  Stage 4 — PFE 2025
+#  Mohamed Bouzira & Bakhti Rayane Abderaouef
+#
+#  Networks:
+#    honeypot_net — 172.20.0.0/24 — all IoT devices + main-server
+#    elk_net      — 172.22.0.0/24 — internal, ELK + filebeat only
+#
+#  Volumes:
+#    honeypot_logs — shared between main-server and filebeat
+#    elk_data      — Elasticsearch persistent data
+# ================================================================
+
+networks:
+  honeypot_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+  elk_net:
+    driver: bridge
+    #internal: true
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+
+volumes:
+  honeypot_logs:     # shared: main-server writes, filebeat reads
+  elk_data:          # Elasticsearch persistent storage
+
+# ================================================================
+#  SERVICES
+# ================================================================
+services:
+
+  # ──────────────────────────────────────────────────────────────
+  # MAIN SERVER
+  # Cowrie + Mosquitto + CoAP + HTTP + IoT Platform + tshark
+  # ──────────────────────────────────────────────────────────────
+  main-server:
+    build:
+      context: ./main-server
+      dockerfile: Dockerfile
+    container_name: main-server
+    hostname: home-gateway
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.2
+    ports:
+      - "22:2222"        # SSH  honeypot
+      - "23:2323"        # Telnet honeypot
+      - "1883:1883"      # MQTT broker
+      - "5683:5683/udp"  # CoAP server
+      - "8080:8080"      # HTTP server (camera/doorbell)
+      - "80:80"          # IoT platform dashboard
+    volumes:
+      - honeypot_logs:/var/log   # share logs with filebeat
+    cap_add:
+      - NET_ADMIN        # needed for tshark packet capture
+      - NET_RAW
+    tty: true
+    restart: unless-stopped
+    depends_on:
+      - elk
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-CAMERA
+  # ──────────────────────────────────────────────────────────────
+  sim-camera:
+    build:
+      context: ./IoT-devices/camera
+      dockerfile: Dockerfile
+    container_name: sim-camera
+    hostname: sim-camera
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "8554:8554" 
+    environment:
+      - HTTP_SERVER=172.20.0.2
+      - DEVICE_ID=camera_01
+      - DEVICE_TYPE=camera
+      - DEVICE_IP=172.20.0.10
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-LOCK
+  # ──────────────────────────────────────────────────────────────
+  sim-lock:
+    build:
+      context: ./IoT-devices/lock
+      dockerfile: Dockerfile
+    container_name: sim-lock
+    hostname: sim-lock
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.11
+    environment:
+      - BROKER=172.20.0.2
+      - DEVICE_ID=lock_01
+      - DEVICE_TYPE=lock
+      - DEVICE_IP=172.20.0.11
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-ALARM
+  # ──────────────────────────────────────────────────────────────
+  sim-alarm:
+    build:
+      context: ./IoT-devices/alarm
+      dockerfile: Dockerfile
+    container_name: sim-alarm
+    hostname: sim-alarm
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.12
+    environment:
+      - BROKER=172.20.0.2
+      - DEVICE_ID=alarm_01
+      - DEVICE_TYPE=alarm
+      - DEVICE_IP=172.20.0.12
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-THERMOSTAT
+  # ──────────────────────────────────────────────────────────────
+  sim-thermostat:
+    build:
+      context: ./IoT-devices/thermostat
+      dockerfile: Dockerfile
+    container_name: sim-thermostat
+    hostname: sim-thermostat
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.13
+    environment:
+      - BROKER=172.20.0.2
+      - DEVICE_ID=thermostat_01
+      - DEVICE_TYPE=thermostat
+      - DEVICE_IP=172.20.0.13
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-SMARTPLUG
+  # ──────────────────────────────────────────────────────────────
+  sim-smartplug:
+    build:
+      context: ./IoT-devices/smartplug
+      dockerfile: Dockerfile
+    container_name: sim-smartplug
+    hostname: sim-smartplug
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.14
+    environment:
+      - BROKER=172.20.0.2
+      - DEVICE_ID=smartplug_01
+      - DEVICE_TYPE=smartplug
+      - DEVICE_IP=172.20.0.14
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-MOTION
+  # ──────────────────────────────────────────────────────────────
+  sim-motion:
+    build:
+      context: ./IoT-devices/motion
+      dockerfile: Dockerfile
+    container_name: sim-motion
+    hostname: sim-motion
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.15
+    environment:
+      - COAP_SERVER=172.20.0.2
+      - DEVICE_ID=motion_01
+      - DEVICE_TYPE=motion
+      - DEVICE_IP=172.20.0.15
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-DOORBELL
+  # ──────────────────────────────────────────────────────────────
+  sim-doorbell:
+    build:
+      context: ./IoT-devices/doorbell
+      dockerfile: Dockerfile
+    container_name: sim-doorbell
+    hostname: sim-doorbell
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.16
+    environment:
+      - HTTP_SERVER=172.20.0.2
+      - DEVICE_ID=doorbell_01
+      - DEVICE_TYPE=doorbell
+      - DEVICE_IP=172.20.0.16
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # SIM-LIGHTBULB
+  # ──────────────────────────────────────────────────────────────
+  sim-lightbulb:
+    build:
+      context: ./IoT-devices/lightbulb
+      dockerfile: Dockerfile
+    container_name: sim-lightbulb
+    hostname: sim-lightbulb
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.17
+    environment:
+      - COAP_SERVER=172.20.0.2
+      - DEVICE_ID=lightbulb_01
+      - DEVICE_TYPE=lightbulb
+      - DEVICE_IP=172.20.0.17
+    restart: unless-stopped
+    depends_on:
+      - main-server
+
+  # ──────────────────────────────────────────────────────────────
+  # ELK — Elasticsearch + Logstash + Kibana
+  # Only accessible via elk_net — NOT exposed to honeypot
+  # Access Kibana via SSH tunnel: ssh -L 5601:172.22.0.2:5601 user@server
+  # ──────────────────────────────────────────────────────────────
+  elk:
+    image: sebp/elk:8.6.0
+    container_name: elk
+    hostname: elk
+    networks:
+      elk_net:
+        ipv4_address: 172.22.0.2
+    volumes:
+      - elk_data:/var/lib/elasticsearch
+      - ./elk/logstash.conf:/etc/logstash/conf.d/logstash.conf:ro
+      - ./elk/configs/02-beats-input.conf:/etc/logstash/conf.d/02-beats-input.conf:ro
+      - ./elk/configs/05-beats-plain.conf:/etc/logstash/conf.d/05-beats-plain.conf:ro
+      - ./elk/configs/30-output.conf:/etc/logstash/conf.d/30-output.conf:ro
+      # Override sebp/elk default configs that we don't need
+      - ./elk/configs/10-syslog.conf:/etc/logstash/conf.d/10-syslog.conf:ro
+      - ./elk/configs/11-nginx.conf:/etc/logstash/conf.d/11-nginx.conf:ro
+    environment:
+      - ES_HEAP_SIZE=2g
+      - LS_HEAP_SIZE=1g
+      - LS_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:              # Exposed, but protected with firewall => — internal only
+      - "5601:5601"
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────
+  # ELK INIT — applies index templates once on startup
+  # Runs once, exits, never restarts
+  # ──────────────────────────────────────────────────────────────
+  elk-init:
+    image: curlimages/curl:latest
+    container_name: elk-init
+    networks:
+      elk_net:
+        ipv4_address: 172.22.0.5
+    depends_on:
+      - elk
+    restart: "no"
+    volumes:
+      - ./elk/elk-init.sh:/elk-init.sh:ro
+    entrypoint: sh /elk-init.sh
+
+
+
+  # ──────────────────────────────────────────────────────────────
+  # FILEBEAT — ships logs from main-server to ELK
+  # Bridges both networks: reads honeypot_logs, ships to elk_net
+  # ──────────────────────────────────────────────────────────────
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.6.0
+    container_name: filebeat
+    hostname: filebeat
+    networks:
+      honeypot_net:
+        ipv4_address: 172.20.0.20
+      elk_net:
+        ipv4_address: 172.22.0.3
+    volumes:
+      - honeypot_logs:/var/log:ro              # read logs from main-server
+      - ./elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    user: root
+    command: >-
+      bash -c "until bash -c 'echo > /dev/tcp/172.22.0.2/5045' 2>/dev/null; do echo '[FILEBEAT] Waiting for Logstash...'; sleep 5; done && filebeat -e --strict.perms=false"
+    restart: unless-stopped
+    depends_on:
+      - elk
+      - main-server

@@ -1,0 +1,10 @@
+{
+  "avg_reward": 45.49600000000001,
+  "std_reward": 15.184142517771637,
+  "avg_steps": 47.32,
+  "detection_rate": 0.08,
+  "avg_success_rate": 0.3935821627647714,
+  "total_episodes": 50,
+  "difficulty": "hard",
+  "mode": "simulation"
+}

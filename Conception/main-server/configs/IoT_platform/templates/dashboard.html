@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHome Hub — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:       #0a0e17;
+            --surface:  #111827;
+            --surface2: #1a2235;
+            --border:   #1e2d40;
+            --accent:   #00d4aa;
+            --accent2:  #0ea5e9;
+            --text:     #e2e8f0;
+            --muted:    #64748b;
+            --online:   #22c55e;
+            --offline:  #ef4444;
+            --warn:     #f59e0b;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            height: 60px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 16px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .nav-logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            margin-left: 16px;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--online);
+            box-shadow: 0 0 6px var(--online);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-time {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            border-color: var(--offline);
+            color: var(--offline);
+        }
+
+        /* ── LAYOUT ── */
+        .layout {
+            display: flex;
+            flex: 1;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 220px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: sticky;
+            top: 60px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+
+        .sidebar-label {
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            padding: 12px 12px 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--muted);
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(0,212,170,0.1);
+            border-color: rgba(0,212,170,0.2);
+            color: var(--accent);
+        }
+
+        .nav-item .icon { font-size: 16px; }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--online);
+            color: #0a0e17;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ── MAIN CONTENT ── */
+        .main {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-subtitle {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        /* ── GRID ── */
+        .grid { display: grid; gap: 16px; }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+        /* ── DEVICE CARD ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(0,212,170,0.2);
+            transform: translateY(-1px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: var(--surface2);
+        }
+
+        .card-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .badge-online  { background: rgba(34,197,94,0.1);  color: var(--online); }
+        .badge-offline { background: rgba(239,68,68,0.1);  color: var(--offline); }
+        .badge-warn    { background: rgba(245,158,11,0.1); color: var(--warn); }
+
+        .badge-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--accent);
+            font-family: 'DM Mono', monospace;
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+
+        .card-unit {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── BUTTONS ── */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #0a0e17;
+            border: none;
+        }
+
+        .btn-primary:hover { opacity: 0.85; }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.1);
+            border-color: rgba(239,68,68,0.3);
+            color: var(--offline);
+        }
+
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+        .btn-success {
+            background: rgba(34,197,94,0.1);
+            border-color: rgba(34,197,94,0.3);
+            color: var(--online);
+        }
+
+        .btn-success:hover { background: rgba(34,197,94,0.2); }
+
+        .btn-warn {
+            background: rgba(245,158,11,0.1);
+            border-color: rgba(245,158,11,0.3);
+            color: var(--warn);
+        }
+
+        .btn-warn:hover { background: rgba(245,158,11,0.2); }
+
+        .btn-neutral {
+            background: var(--surface2);
+            border-color: var(--border);
+            color: var(--muted);
+        }
+
+        .btn-neutral:hover { color: var(--text); border-color: var(--muted); }
+
+        /* ── CHART ── */
+        .chart-container {
+            position: relative;
+            height: 160px;
+            margin-top: 12px;
+        }
+
+        /* ── STAT ROW ── */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .stat-row:last-child { border-bottom: none; }
+
+        .stat-label { color: var(--muted); }
+
+        .stat-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ── CAMERA CARD ── */
+        .rtsp-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            word-break: break-all;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rtsp-copy {
+            margin-left: auto;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .rtsp-copy:hover { color: var(--accent); }
+
+        /* ── ALERT ── */
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .alert-warn {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.2);
+            color: var(--warn);
+        }
+
+        /* ── OVERVIEW MINI CARD ── */
+        .mini-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .mini-card:hover { border-color: rgba(0,212,170,0.2); }
+
+        .mini-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .mini-info { flex: 1; min-width: 0; }
+
+        .mini-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-value {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── NOTIFICATION ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 18px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 999;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-logo">
+        <div class="nav-logo-icon">🏠</div>
+        SmartHome Hub
+    </div>
+    <div class="nav-status">
+        <div class="status-dot"></div>
+        <span id="online-count">0</span> devices online
+    </div>
+    <div class="nav-right">
+        <div class="nav-time" id="nav-clock">--:--:--</div>
+        <a href="/logout"><button class="btn-logout">Sign Out</button></a>
+    </div>
+</nav>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-label">Navigation</div>
+        <div class="nav-item active" onclick="showSection('overview')">
+            <span class="icon">⬡</span> Overview
+        </div>
+        <div class="nav-item" onclick="showSection('security')">
+            <span class="icon">🔒</span> Security
+        </div>
+        <div class="nav-item" onclick="showSection('environment')">
+            <span class="icon">🌡</span> Environment
+        </div>
+        <div class="nav-item" onclick="showSection('lighting')">
+            <span class="icon">💡</span> Lighting
+        </div>
+        <div class="nav-item" onclick="showSection('camera')">
+            <span class="icon">📷</span> Camera
+        </div>
+
+        <div class="sidebar-label" style="margin-top:16px">System</div>
+        <div class="nav-item" onclick="showSection('overview')">
+            <span class="icon">⚙</span> Settings
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- ── OVERVIEW ── -->
+        <section id="section-overview" class="section active">
+            <div class="section-title">Overview</div>
+            <div class="section-subtitle">All devices at a glance — <span id="last-update">updating...</span></div>
+
+            <div class="grid grid-4" id="overview-grid">
+                <!-- populated by JS -->
+            </div>
+        </section>
+
+        <!-- ── SECURITY ── -->
+        <section id="section-security" class="section">
+            <div class="section-title">Security</div>
+            <div class="section-subtitle">Lock, alarm and doorbell controls</div>
+
+            <div class="grid grid-2">
+
+                <!-- LOCK -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🔒</div>
+                            <div>
+                                <div class="card-name">Smart Lock</div>
+                                <div class="card-sub">Front Door</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="lock-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="lock-state">--</div>
+                    <div class="card-unit">Current State</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Battery</span>
+                        <span class="stat-value" id="lock-battery">-- %</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Tamper Alert</span>
+                        <span class="stat-value" id="lock-tamper">--</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="sendCommand('lock','lock',this)">🔒 Lock</button>
+                        <button class="btn btn-warn" onclick="sendCommand('lock','unlock',this)">🔓 Unlock</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="lock-seen">--</span></div>
+                </div>
+
+                <!-- ALARM -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🚨</div>
+                            <div>
+                                <div class="card-name">Alarm System</div>
+                                <div class="card-sub">Home Security</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="alarm-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="alarm-state">--</div>
+                    <div class="card-unit">Current State</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Zone</span>
+                        <span class="stat-value" id="alarm-zone">--</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Siren</span>
+                        <span class="stat-value" id="alarm-siren">--</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-warn"    onclick="sendCommand('alarm','arm_home',this)">🏠 Arm Home</button>
+                        <button class="btn btn-danger"  onclick="sendCommand('alarm','arm_away',this)">🚨 Arm Away</button>
+                        <button class="btn btn-success" onclick="sendCommand('alarm','disarm',this)">✅ Disarm</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="alarm-seen">--</span></div>
+                </div>
+
+                <!-- DOORBELL -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🔔</div>
+                            <div>
+                                <div class="card-name">Doorbell</div>
+                                <div class="card-sub">Front Door</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="doorbell-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="doorbell-event">--</div>
+                    <div class="card-unit">Last Event</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Battery</span>
+                        <span class="stat-value" id="doorbell-battery">-- %</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">WiFi Signal</span>
+                        <span class="stat-value" id="doorbell-wifi">-- dBm</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="sendCommand('doorbell','enable',this)">🔔 Enable</button>
+                        <button class="btn btn-neutral" onclick="sendCommand('doorbell','mute',this)">🔇 Mute</button>
+                        <button class="btn btn-danger"  onclick="sendCommand('doorbell','disable',this)">⏹ Disable</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="doorbell-seen">--</span></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── ENVIRONMENT ── -->
+        <section id="section-environment" class="section">
+            <div class="section-title">Environment</div>
+            <div class="section-subtitle">Thermostat and power management</div>
+
+            <div class="grid grid-2">
+
+                <!-- THERMOSTAT -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🌡</div>
+                            <div>
+                                <div class="card-name">Thermostat</div>
+                                <div class="card-sub">Living Room</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="thermostat-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:24px; margin-bottom:12px">
+                        <div>
+                            <div class="card-value" id="thermostat-temp">--</div>
+                            <div class="card-unit">°C Temperature</div>
+                        </div>
+                        <div>
+                            <div class="card-value" id="thermostat-humidity" style="font-size:24px">--</div>
+                            <div class="card-unit">% Humidity</div>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Mode</span>
+                        <span class="stat-value" id="thermostat-mode">--</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="sendCommand('thermostat','set_mode:cooling',this)">❄ Cooling</button>
+                        <button class="btn btn-danger"  onclick="sendCommand('thermostat','set_mode:heating',this)">🔥 Heating</button>
+                        <button class="btn btn-neutral" onclick="sendCommand('thermostat','set_mode:off',this)">⏹ Off</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="thermostat-seen">--</span></div>
+                </div>
+
+                <!-- SMART PLUG -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">⚡</div>
+                            <div>
+                                <div class="card-name">Smart Plug</div>
+                                <div class="card-sub">Kitchen</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="smartplug-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="smartplug-power">--</div>
+                    <div class="card-unit">Watts — Current Draw</div>
+                    <div class="stat-row">
+                        <span class="stat-label">State</span>
+                        <span class="stat-value" id="smartplug-state">--</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Energy Used</span>
+                        <span class="stat-value" id="smartplug-energy">-- kWh</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="powerChart"></canvas>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="sendCommand('smartplug','on',this)">⚡ Turn On</button>
+                        <button class="btn btn-danger"  onclick="sendCommand('smartplug','off',this)">⏹ Turn Off</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="smartplug-seen">--</span></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── LIGHTING ── -->
+        <section id="section-lighting" class="section">
+            <div class="section-title">Lighting</div>
+            <div class="section-subtitle">Lights and motion sensors</div>
+
+            <div class="grid grid-2">
+
+                <!-- LIGHTBULB -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">💡</div>
+                            <div>
+                                <div class="card-name">Smart Bulb</div>
+                                <div class="card-sub">Living Room</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="lightbulb-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="lightbulb-state">--</div>
+                    <div class="card-unit">Current State</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Brightness</span>
+                        <span class="stat-value" id="lightbulb-brightness">-- %</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Color Temp</span>
+                        <span class="stat-value" id="lightbulb-color">--</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="sendCommand('lightbulb','on',this)">💡 On</button>
+                        <button class="btn btn-neutral" onclick="sendCommand('lightbulb','off',this)">⏹ Off</button>
+                        <button class="btn btn-warn"    onclick="sendCommand('lightbulb','set_brightness:50',this)">50% Dim</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="lightbulb-seen">--</span></div>
+                </div>
+
+                <!-- MOTION -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">👁</div>
+                            <div>
+                                <div class="card-name">Motion Sensor</div>
+                                <div class="card-sub">Hallway</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="motion-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="motion-state">--</div>
+                    <div class="card-unit">Motion Status</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Zone</span>
+                        <span class="stat-value" id="motion-zone">--</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="sendCommand('motion','enable',this)">✅ Enable</button>
+                        <button class="btn btn-danger"  onclick="sendCommand('motion','disable',this)">⏹ Disable</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="motion-seen">--</span></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── CAMERA ── -->
+        <section id="section-camera" class="section">
+            <div class="section-title">Camera</div>
+            <div class="section-subtitle">Live feed and camera controls</div>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">📷</div>
+                            <div>
+                                <div class="card-name">IP Camera</div>
+                                <div class="card-sub">Front Door — 1080p</div>
+                            </div>
+                        </div>
+                        <div class="badge badge-offline" id="camera-badge">
+                            <div class="badge-dot"></div> offline
+                        </div>
+                    </div>
+                    <div class="card-value" id="camera-event">--</div>
+                    <div class="card-unit">Last Detected Event</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Night Mode</span>
+                        <span class="stat-value" id="camera-night">--</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Resolution</span>
+                        <span class="stat-value">1920 × 1080</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Protocol</span>
+                        <span class="stat-value">RTSP / H.264</span>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; color:var(--muted); margin-top:14px; margin-bottom:6px; font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.8px;">Live Stream URL</div>
+                        <div class="rtsp-box">
+                            <span id="camera-rtsp">rtsp://...</span>
+                            <span class="rtsp-copy" onclick="copyRTSP()" title="Copy URL">⎘</span>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="sendCommand('camera','start',this)">▶ Start</button>
+                        <button class="btn btn-danger"  onclick="sendCommand('camera','stop',this)">⏹ Stop</button>
+                        <button class="btn btn-neutral" onclick="sendCommand('camera','restart',this)">↺ Restart</button>
+                    </div>
+                    <div class="card-meta">🕐 Last seen: <span id="camera-seen">--</span></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">ℹ</div>
+                            <div>
+                                <div class="card-name">How to view stream</div>
+                                <div class="card-sub">Instructions</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size:13px; color:var(--muted); line-height:1.8">
+                        <p style="margin-bottom:12px">To view the live camera stream, open the RTSP URL in a compatible player:</p>
+                        <div class="stat-row"><span class="stat-label">VLC</span><span class="stat-value" style="font-size:11px">Media → Open Network Stream</span></div>
+                        <div class="stat-row"><span class="stat-label">ffplay</span><span class="stat-value" style="font-size:11px">ffplay &lt;rtsp_url&gt;</span></div>
+                        <div class="stat-row"><span class="stat-label">Protocol</span><span class="stat-value">RTSP / TCP</span></div>
+                        <div class="stat-row"><span class="stat-label">Codec</span><span class="stat-value">H.264 + AAC</span></div>
+                        <div class="stat-row"><span class="stat-label">Port</span><span class="stat-value">8554</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+    <span id="toast-icon">✓</span>
+    <span id="toast-msg">Command sent</span>
+</div>
+
+<script>
+// ── SOCKET.IO ──
+const socket = io();
+
+socket.on('device_update', (data) => {
+    updateUI(data.states);
+});
+
+// ── CLOCK ──
+function updateClock() {
+    const now = new Date();
+    document.getElementById('nav-clock').textContent =
+        now.toLocaleTimeString('en-GB');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── NAVIGATION ──
+function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+// ── FETCH INITIAL STATE ──
+async function fetchDevices() {
+    try {
+        const res = await fetch('/api/devices');
+        const data = await res.json();
+        updateUI(data);
+    } catch(e) {
+        console.error('Failed to fetch devices', e);
+    }
+}
+
+// ── UPDATE UI ──
+function updateUI(states) {
+    const now = new Date().toLocaleTimeString('en-GB');
+    document.getElementById('last-update').textContent = 'Last update: ' + now;
+
+    // count online devices
+    let online = Object.values(states).filter(d => d.status === 'online').length;
+    document.getElementById('online-count').textContent = online;
+
+    // THERMOSTAT
+    if (states.thermostat) {
+        const t = states.thermostat;
+        setText('thermostat-temp',     t.temperature !== '--' ? t.temperature + '°' : '--');
+        setText('thermostat-humidity', t.humidity !== '--' ? t.humidity + '%' : '--');
+        setText('thermostat-mode',     t.mode);
+        setText('thermostat-seen',     t.last_seen);
+        setBadge('thermostat-badge',   t.status);
+        if (t.temperature !== '--') addTempPoint(parseFloat(t.temperature));
+    }
+
+    // LOCK
+    if (states.lock) {
+        const l = states.lock;
+        setText('lock-state',   l.state);
+        setText('lock-battery', l.battery !== '--' ? l.battery + ' %' : '--');
+        setText('lock-tamper',  l.tamper ? '⚠ ALERT' : 'Clear');
+        setText('lock-seen',    l.last_seen);
+        setBadge('lock-badge',  l.status);
+    }
+
+    // ALARM
+    if (states.alarm) {
+        const a = states.alarm;
+        setText('alarm-state',  a.state);
+        setText('alarm-zone',   a.zone);
+        setText('alarm-siren',  a.siren ? '🔊 Active' : 'Silent');
+        setText('alarm-seen',   a.last_seen);
+        setBadge('alarm-badge', a.status);
+    }
+
+    // SMARTPLUG
+    if (states.smartplug) {
+        const p = states.smartplug;
+        setText('smartplug-power',  p.power !== '--' ? p.power + ' W' : '--');
+        setText('smartplug-state',  p.state);
+        setText('smartplug-energy', p.energy !== '--' ? p.energy + ' kWh' : '--');
+        setText('smartplug-seen',   p.last_seen);
+        setBadge('smartplug-badge', p.status);
+        if (p.power !== '--') addPowerPoint(parseFloat(p.power));
+    }
+
+    // MOTION
+    if (states.motion) {
+        const m = states.motion;
+        const enabledText = m.enabled === false ? '⚫ Disabled' : (m.motion_detected ? '🔴 Detected' : '🟢 Clear');
+        setText('motion-state', enabledText);
+        setText('motion-zone',  m.zone);
+        setText('motion-seen',  m.last_seen);
+        setBadge('motion-badge', m.status);
+    }
+
+    // LIGHTBULB
+    if (states.lightbulb) {
+        const lb = states.lightbulb;
+        setText('lightbulb-state',      lb.state);
+        setText('lightbulb-brightness', lb.brightness !== '--' ? lb.brightness + ' %' : '--');
+        setText('lightbulb-color',      lb.color_temp);
+        setText('lightbulb-seen',       lb.last_seen);
+        setBadge('lightbulb-badge',     lb.status);
+    }
+
+    // CAMERA
+    if (states.camera) {
+        const c = states.camera;
+        setText('camera-event', c.event_type);
+        setText('camera-night', c.night_mode ? '🌙 Active' : 'Off');
+        setText('camera-rtsp',  c.rtsp_url);
+        setText('camera-seen',  c.last_seen);
+        setBadge('camera-badge', c.status);
+    }
+
+    // DOORBELL
+    if (states.doorbell) {
+        const d = states.doorbell;
+        setText('doorbell-event',   d.event_type);
+        setText('doorbell-battery', d.battery_level !== '--' ? d.battery_level + ' %' : '--');
+        setText('doorbell-wifi',    d.wifi_signal !== '--' ? d.wifi_signal + ' dBm' : '--');
+        setText('doorbell-seen',    d.last_seen);
+        setBadge('doorbell-badge',  d.status);
+    }
+
+    // update overview
+    updateOverview(states);
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value !== undefined && value !== null ? value : '--';
+}
+
+function setBadge(id, status) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'badge ' + (status === 'online' ? 'badge-online' : 'badge-offline');
+    el.innerHTML = `<div class="badge-dot"></div> ${status}`;
+}
+
+// ── OVERVIEW GRID ──
+const overviewDevices = [
+    { key: 'thermostat', icon: '🌡', name: 'Thermostat',    getValue: s => s.temperature !== '--' ? s.temperature + '° C' : 'offline' },
+    { key: 'lock',       icon: '🔒', name: 'Smart Lock',    getValue: s => s.state },
+    { key: 'alarm',      icon: '🚨', name: 'Alarm',         getValue: s => s.state },
+    { key: 'smartplug',  icon: '⚡', name: 'Smart Plug',    getValue: s => s.power !== '--' ? s.power + ' W' : 'offline' },
+    { key: 'motion',     icon: '👁', name: 'Motion Sensor', getValue: s => s.motion_detected ? 'Detected' : 'Clear' },
+    { key: 'lightbulb',  icon: '💡', name: 'Light Bulb',    getValue: s => s.state },
+    { key: 'camera',     icon: '📷', name: 'IP Camera',     getValue: s => s.event_type },
+    { key: 'doorbell',   icon: '🔔', name: 'Doorbell',      getValue: s => s.event_type },
+];
+
+function updateOverview(states) {
+    const grid = document.getElementById('overview-grid');
+    grid.innerHTML = overviewDevices.map(d => {
+        const state  = states[d.key] || {};
+        const online = state.status === 'online';
+        const value  = d.getValue(state) || '--';
+        return `
+        <div class="mini-card">
+            <div class="mini-icon">${d.icon}</div>
+            <div class="mini-info">
+                <div class="mini-name">${d.name}</div>
+                <div class="mini-value">${value}</div>
+            </div>
+            <div class="badge ${online ? 'badge-online' : 'badge-offline'}" style="flex-shrink:0">
+                <div class="badge-dot"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── SEND COMMAND — optimistic UI update ──
+// updates the frontend immediately, then sends to backend
+async function sendCommand(device, command, btn) {
+    // 1. button loading state
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor  = 'wait';
+    }
+
+    // 2. optimistic UI update — change display immediately
+    applyOptimisticUpdate(device, command);
+
+    // 3. send to backend in background
+    try {
+        const res = await fetch('/api/command', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ device, command })
+        });
+        const data = await res.json();
+        showToast('✓', `${device} → ${command}`);
+    } catch(e) {
+        showToast('✗', 'Command failed — ' + e.message, true);
+    } finally {
+        // restore button
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor  = '';
+        }
+    }
+}
+
+// ── OPTIMISTIC UPDATE — what each command looks like immediately ──
+function applyOptimisticUpdate(device, command) {
+    switch(device) {
+
+        case 'lock':
+            if (command === 'lock')   setText('lock-state', 'locked');
+            if (command === 'unlock') setText('lock-state', 'unlocked');
+            break;
+
+        case 'alarm':
+            if (command === 'arm_home') setText('alarm-state', 'armed_home');
+            if (command === 'arm_away') setText('alarm-state', 'armed_away');
+            if (command === 'disarm')   setText('alarm-state', 'disarmed');
+            break;
+
+        case 'smartplug':
+            if (command === 'on')  { setText('smartplug-state', 'on');  setText('smartplug-power', '-- W'); }
+            if (command === 'off') { setText('smartplug-state', 'off'); setText('smartplug-power', '0 W'); }
+            break;
+
+        case 'thermostat':
+            if (command.startsWith('set_mode:')) {
+                const mode = command.split(':')[1];
+                setText('thermostat-mode', mode);
+            }
+            break;
+
+        case 'lightbulb':
+            if (command === 'on')  setText('lightbulb-state', 'on');
+            if (command === 'off') setText('lightbulb-state', 'off');
+            if (command.startsWith('set_brightness:')) {
+                const b = command.split(':')[1];
+                setText('lightbulb-brightness', b + ' %');
+            }
+            break;
+
+        case 'motion':
+            if (command === 'enable')  setText('motion-state', '🟢 Clear');
+            if (command === 'disable') setText('motion-state', '⚫ Disabled');
+            break;
+
+        case 'camera':
+            if (command === 'stop')    setText('camera-event', 'offline');
+            if (command === 'start')   setText('camera-event', 'online');
+            if (command === 'restart') setText('camera-event', 'restarting...');
+            break;
+
+        case 'doorbell':
+            if (command === 'enable')  setText('doorbell-event', 'enabled');
+            if (command === 'disable') setText('doorbell-event', 'disabled');
+            if (command === 'mute')    setText('doorbell-event', 'muted');
+            break;
+    }
+}
+
+// ── TOAST ──
+function showToast(icon, msg, error = false) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-icon').textContent = icon;
+    document.getElementById('toast-msg').textContent  = msg;
+    toast.style.borderColor = error ? 'rgba(239,68,68,0.3)' : 'rgba(0,212,170,0.3)';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ── COPY RTSP ──
+function copyRTSP() {
+    const url = document.getElementById('camera-rtsp').textContent;
+    navigator.clipboard.writeText(url);
+    showToast('⎘', 'RTSP URL copied to clipboard');
+}
+
+// ── TEMPERATURE CHART ──
+const tempHistory = [];
+const tempChart = new Chart(document.getElementById('tempChart'), {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Temperature °C',
+            data: [],
+            borderColor: '#00d4aa',
+            backgroundColor: 'rgba(0,212,170,0.1)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#00d4aa',
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2d40' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2d40' }, min: 10, max: 40 }
+        }
+    }
+});
+
+function addTempPoint(value) {
+    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (tempChart.data.labels.length > 20) {
+        tempChart.data.labels.shift();
+        tempChart.data.datasets[0].data.shift();
+    }
+    tempChart.data.labels.push(time);
+    tempChart.data.datasets[0].data.push(value);
+    tempChart.update('none');
+}
+
+// ── POWER CHART ──
+const powerChart = new Chart(document.getElementById('powerChart'), {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Power W',
+            data: [],
+            backgroundColor: 'rgba(14,165,233,0.3)',
+            borderColor: '#0ea5e9',
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2d40' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2d40' }, min: 0, max: 3000 }
+        }
+    }
+});
+
+function addPowerPoint(value) {
+    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (powerChart.data.labels.length > 20) {
+        powerChart.data.labels.shift();
+        powerChart.data.datasets[0].data.shift();
+    }
+    powerChart.data.labels.push(time);
+    powerChart.data.datasets[0].data.push(value);
+    powerChart.update('none');
+}
+
+// ── INIT ──
+fetchDevices();
+setInterval(fetchDevices, 15000);
+</script>
+</body>
+</html>

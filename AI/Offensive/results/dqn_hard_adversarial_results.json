@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-05-28T12:26:03.758297",
+  "difficulty": "hard",
+  "mode": "adversarial",
+  "timesteps": 25000,
+  "seed": 42,
+  "metrics": {
+    "avg_reward": -4.2168608787827875,
+    "avg_steps": 1.05,
+    "detection_rate": 1.0,
+    "avg_action_success_rate": 0.5
+  },
+  "config": {
+    "detection_probability": 0.9,
+    "reward_scale": 2.0,
+    "max_steps": 50,
+    "defense_model": "all"
+  }
+}

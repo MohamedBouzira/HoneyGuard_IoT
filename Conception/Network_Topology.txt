@@ -1,0 +1,145 @@
+================================================================
+  IoT SMART-HOME HONEYPOT — NETWORK & DEVICE LIST
+  PFE 2025 — Mohamed Bouzira & Bakhti Rayane Abderaouef
+  ESTIN
+================================================================
+
+
+────────────────────────────────────────────────────────────────
+  NETWORK 1 — honeypot_net
+  Subnet : 172.20.0.0/24
+  Gateway: 172.20.0.1
+  Type   : Bridge (exposed to internet)
+────────────────────────────────────────────────────────────────
+
+  MAIN SERVER — 172.20.0.2
+  ┌─────────────┬──────────────┬────────────────────────────────┐
+  │ Port        │ Service      │ Role                           │
+  ├─────────────┼──────────────┼────────────────────────────────┤
+  │ :22 / :23   │ Cowrie       │ SSH/Telnet honeypot            │
+  │ :1883       │ Mosquitto    │ MQTT broker                    │
+  │ :5683/udp   │ RIoTPot      │ CoAP server                    │
+  │ :8080       │ HTTP server  │ Device reporting endpoint      │
+  │ :80         │ HTTP server  │ IoT platform                   │
+  └─────────────┴──────────────┴────────────────────────────────┘
+
+  FAKE IoT DEVICES (Virtual LAN)
+  ┌────────────────┬─────────────────┬──────────┬───────────────────────────┐
+  │ Container      │ IP              │ Protocol │ Role                      │
+  ├────────────────┼─────────────────┼──────────┼───────────────────────────┤
+  │ sim-camera     │ 172.20.0.10     │ HTTP     │ POSTs camera events       │
+  │ sim-lock       │ 172.20.0.11     │ MQTT     │ Publishes lock/unlock     │
+  │ sim-alarm      │ 172.20.0.12     │ MQTT     │ Publishes alarm state     │
+  │ sim-thermostat │ 172.20.0.13     │ MQTT     │ Publishes temp/humidity   │
+  │ sim-smartplug  │ 172.20.0.14     │ MQTT     │ Publishes power state     │
+  │ sim-motion     │ 172.20.0.15     │ CoAP     │ Sends motion detection    │
+  │ sim-doorbell   │ 172.20.0.16     │ HTTP     │ POSTs doorbell events     │
+  │ sim-lightbulb  │ 172.20.0.17     │ CoAP     │ Sends on/off state        │
+  └────────────────┴─────────────────┴──────────┴───────────────────────────┘
+
+  BRIDGE
+  ┌──────────┬─────────────────┬───────────────────────────────────────────┐
+  │ filebeat │ 172.20.0.20     │ Reads logs → ships to ELK                 │
+  └──────────┴─────────────────┴───────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────
+  NETWORK 2 — elk_net
+  Subnet : 172.22.0.0/24
+  Gateway: 172.22.0.1
+  Type   : Bridge internal: true (no internet access)
+────────────────────────────────────────────────────────────────
+
+  ┌──────────┬─────────────────┬───────────┬──────────────────────────────┐
+  │ Container│ IP              │ Ports     │ Role                         │
+  ├──────────┼─────────────────┼───────────┼──────────────────────────────┤
+  │ elk      │ 172.22.0.2      │ :9200     │ Elasticsearch (data storage) │
+  │          │                 │ :5601     │ Kibana (dashboard)           │
+  │          │                 │ :5044     │ Logstash (log processing)    │
+  ├──────────┼─────────────────┼───────────┼──────────────────────────────┤
+  │ filebeat │ 172.22.0.3      │ —         │ Receives logs from           │
+  │          │ (also on        │           │ honeypot_net, pushes to ELK  │
+  │          │  honeypot_net)  │           │                              │
+  └──────────┴─────────────────┴───────────┴──────────────────────────────┘
+
+  ACCESS KIBANA:
+  ssh -L 5601:172.22.0.2:5601 user@your-vm
+  Then open: http://localhost:5601
+
+
+
+
+
+────────────────────────────────────────────────────────────────
+  PROTOCOL SUMMARY
+────────────────────────────────────────────────────────────────
+
+  MQTT  (port 1883)  → sim-thermostat, sim-smartplug,
+                        sim-lock, sim-alarm
+                        all connect to Mosquitto on main-server
+
+  CoAP  (port 5683)  → sim-motion, sim-lightbulb
+                        all connect to RIoTPot on main-server
+
+  HTTP  (port 8080)  → sim-camera, sim-doorbell
+                        all POST to HTTP server on main-server
+
+  SSH   (port 22)    → Cowrie (honeypot — for attackers)
+  Telnet(port 23)    → Cowrie (honeypot — for attackers)
+
+
+────────────────────────────────────────────────────────────────
+  LOG FLOW
+────────────────────────────────────────────────────────────────
+
+  main-server
+      │
+      ├── /logs/cowrie/      		(SSH/Telnet attack logs)
+      ├── /logs/mqtt/        		(MQTT connection logs)
+      ├── /logs/coap/        		(CoAP request logs)
+      ├── /logs/http/        		(HTTP request logs)
+      ├── /logs/tshark/      		(network logs)
+      └── /logs/platform/       (IoT platform logs)
+      
+              │
+              ▼
+          filebeat
+              │
+              ▼
+            elk
+              │
+              ├── Elasticsearch  (stores everything)
+              ├── Logstash       (processes & parses)
+              └── Kibana         (visualize via SSH tunnel)
+
+================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

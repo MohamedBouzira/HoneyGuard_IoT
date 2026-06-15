@@ -1,0 +1,75 @@
+# ================================================================
+#  FILEBEAT CONFIG — filebeat.yml
+#  Collects JSON logs from main-server → ships to Logstash :5045
+#  v2 - only JSON inputs, no syslog/auth (not useful for AI)
+#  PFE 2025 — Mohamed Bouzira & Bakhti Rayane Abderaouef
+# ================================================================
+
+filebeat.inputs:
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/mqtt/mqtt.json
+    tags: ["mqtt"]
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.ignore_decoding_error: true
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/http/http.json
+    tags: ["http"]
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.ignore_decoding_error: true
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/coap/coap.json
+    tags: ["coap"]
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.ignore_decoding_error: true
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/iot_platform/platform.json
+    tags: ["iot_platform"]
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.ignore_decoding_error: true
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/cowrie/cowrie.json
+    tags: ["cowrie"]
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.ignore_decoding_error: true
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/tshark/packets.json
+    tags: ["network"]
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.ignore_decoding_error: true
+
+# ----------------------------------------------------------------
+# OUTPUT — Logstash on port 5045 (plain beats, no SSL)
+# ----------------------------------------------------------------
+output.logstash:
+  hosts: ["172.22.0.2:5045"]
+
+# ----------------------------------------------------------------
+# LOGGING
+
+# ----------------------------------------------------------------
+logging.level: warning
+logging.to_files: false

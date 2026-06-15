@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-05-28T18:22:17.799394",
+  "difficulty": "hard",
+  "mode": "live",
+  "timesteps": 500,
+  "metrics": {
+    "avg_reward": 75.0,
+    "avg_steps": 50.0,
+    "detection_rate": 0.0,
+    "avg_action_success_rate": 0.6839999999999999
+  },
+  "config": {
+    "detection_probability": 0.9,
+    "reward_scale": 2.0,
+    "max_steps": 50,
+    "defense_model": "all"
+  }
+}

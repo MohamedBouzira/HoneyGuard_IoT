@@ -264,6 +264,7 @@ All three defensive models are served via a single Flask API.
 
 ## Dataset
 
+**Original Dataset: https://www.kaggle.com/datasets/mohamedbouzira/multi-protocol-iot-attack-dataset-realhoneypot **
 `AI/honeypot_dataset.csv` — **244,085 rows × 46 columns** (87.9 MB)
 
 - **Source:** Real attacker traffic from a cloud-deployed honeypot (Google Cloud, April 2026)
